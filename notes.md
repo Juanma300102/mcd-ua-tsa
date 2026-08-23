@@ -11,7 +11,7 @@ Se resolvió la consigna usando dos series horarias reales:
 | ALB producción | `data/alb-prod-requests-2026-07.csv` | `requests` | 2026-07-01 00:00 UTC a 2026-07-31 23:00 UTC | 744 |
 | POS API producción | `data/bodegaai-production-pos-api-request-count-per-target-last-30-days-hourly.csv` | `value` | 2026-07-18 23:00 UTC a 2026-08-17 22:00 UTC | 720 |
 
-Decisión central: analizar cada serie por separado con SARIMA y usar VAR solo sobre el período común, porque los rangos temporales no coinciden completos.
+Decisión central: analizar cada serie por separado con SARIMA y usar VAR solo sobre el período común, porque los rangos temporales no coinciden completos. La ejecución end-to-end del notebook pasó sin errores.
 
 ## Hallazgos principales
 
@@ -35,9 +35,9 @@ Conclusión práctica: ambas series son de tráfico horario con patrón diario; 
 | Usar frecuencia horaria (`1h`) | Los datos están medidos por ventanas de una hora. Mantener la frecuencia evita distorsionar FAC/FACP y SARIMA. |
 | Reindexar a índice horario completo | Permite detectar huecos temporales y evita que los modelos trabajen sobre un calendario implícito incorrecto. |
 | Evitar notación científica | Los conteos son grandes; la lectura humana mejora con separadores de miles. |
-| Analizar estacionariedad antes de modelar | Una serie no estacionaria puede producir relaciones espurias y modelos mal diagnosticados. |
+| Analizar estacionariedad antes de modelar | Una serie no estacionaria puede producir relaciones espurias y modelos mal diagnosticados; aun así, los tests se interpretan junto con la estructura diaria observada. |
 | Probar diferencia regular y diferencia estacional | En tráfico horario, `diff(24)` captura el ciclo diario; `diff(1)` captura cambios locales. |
-| Usar ADF + KPSS | ADF tiene nula de raíz unitaria; KPSS tiene nula de estacionariedad. Juntas reducen una lectura mecánica. |
+| Usar ADF + KPSS | ADF tiene nula de raíz unitaria; KPSS tiene nula de estacionariedad. Juntas reducen una lectura mecánica: ALB en niveles pasa ambos tests al 5%, pero conserva estructura diaria; POS API muestra evidencia mixta en niveles y mejora con transformación. |
 | Usar SARIMA con período estacional `s = 24` | La periodicidad natural esperada es diaria: 24 observaciones por día. |
 | Mantener grilla SARIMA chica | La muestra es corta; una búsqueda enorme sobreactúa precisión y aumenta sobreajuste/costo. |
 | Separar últimas 48 horas como test | Ventana razonable para validar pronóstico horario sin extrapolar demasiado lejos. |
@@ -53,9 +53,9 @@ Conclusión práctica: ambas series son de tráfico horario con patrón diario; 
 
 | Serie | Modelo seleccionado | Motivo |
 |---|---|---|
-| ALB | `SARIMA(1, 1, 1)x(1, 1, 1, 24)` | Fue el mejor dentro de la grilla evaluada según comparación de desempeño/criterios. Incluye diferencia regular y estacional. |
-| POS API | `SARIMA(1, 1, 1)x(1, 0, 1, 24)` | Fue el mejor dentro de la grilla evaluada. Mantiene componente estacional sin diferencia estacional. |
-| VAR conjunto | VAR sobre `log1p(series).diff(24)` con 24 rezagos | Seleccionado por AIC sobre el tramo temporal común. |
+| ALB | `SARIMA(1, 1, 1)x(1, 1, 1, 24)` | Mejor desempeño fuera de muestra dentro de la grilla, con MAPE de test ≈ 0,79%. Incluye diferencia regular y estacional. |
+| POS API | `SARIMA(1, 1, 1)x(1, 0, 1, 24)` | Mejor MAPE de test dentro de la grilla, ≈ 3,90%. Existe otro candidato con mejor AIC/BIC, pero peor MAPE fuera de muestra. |
+| VAR conjunto | VAR sobre `log1p(series).diff(24)` con 24 rezagos | Seleccionado por AIC sobre el tramo temporal común, con cautela por sensibilidad y posible sobreparametrización. |
 
 ## Resolución por punto de la consigna
 
@@ -68,7 +68,7 @@ Conclusión práctica: ambas series son de tráfico horario con patrón diario; 
 | SARIMA | Se comparó una grilla pequeña de modelos con estacionalidad diaria `s=24`. |
 | Training/testing | Se reservaron las últimas 48 horas como test. |
 | Métricas | Se calcularon MAE, RMSE y MAPE. |
-| Comparación de modelos | Se comparó desempeño por MAPE y criterios de información. |
+| Comparación de modelos | Se comparó desempeño por MAPE y criterios de información; cuando MAPE fuera de muestra diverge de AIC/BIC, se prioriza MAPE. |
 | Diagnóstico | Se revisaron residuos, histograma, FAC de residuos y Ljung-Box. |
 | Pronóstico | Se generaron forecasts SARIMA de 48 horas para ambas series. |
 | VAR | Se alinearon ambas series por intersección temporal y se ajustó VAR sobre transformación estacionaria. |
@@ -79,9 +79,10 @@ Conclusión práctica: ambas series son de tráfico horario con patrón diario; 
 
 - El rango común usado para VAR va desde 2026-07-18 23:00 UTC hasta 2026-07-31 23:00 UTC.
 - Luego de `log1p` y diferencia estacional de 24 horas quedaron 289 observaciones para VAR.
-- El AIC seleccionó 24 rezagos.
-- La causalidad de Granger debe leerse como evidencia predictiva, no como causa real de negocio.
-- La lectura final debe ser prudente porque el tramo común entre ambas series es corto.
+- Las métricas VAR reportadas son MAE/RMSE en escala transformada; MAPE se omite intencionalmente porque los valores transformados pueden acercarse a cero o cambiar de signo.
+- El AIC seleccionó 24 rezagos, aunque BIC/HQIC favorecen rezagos más cortos; por eso el resultado puede ser sensible y estar sobreparametrizado.
+- El VAR ajustado sugiere dirección predictiva POS API -> ALB, pero las pruebas bivariadas de Granger en rezagos 6/12/24 no lo confirman.
+- La lectura final debe ser prudente porque el tramo común entre ambas series es corto y la señal causal es exploratoria/modelo-dependiente, no causalidad operacional.
 
 ## Riesgos y caveats
 
@@ -89,7 +90,7 @@ Conclusión práctica: ambas series son de tráfico horario con patrón diario; 
 - Las series no cubren exactamente el mismo período; esto limita el análisis conjunto.
 - Los atípicos detectados por IQR no prueban incidentes; solo marcan horas que merecen inspección.
 - SARIMA y VAR pueden ser sensibles a eventos externos no presentes en el dataset.
-- Si Ljung-Box rechaza en residuos, todavía queda autocorrelación sin explicar y el pronóstico debe tratarse con menor confianza.
+- Ljung-Box en residuos muestra autocorrelación remanente: ALB rechaza en rezagos 24/48, no en 12; POS API rechaza en 12/24/48. Por eso el pronóstico debe tratarse con cautela diagnóstica.
 - Para una decisión productiva real harían falta más historia, validación rolling y contexto operacional.
 
 ## Archivos relacionados
