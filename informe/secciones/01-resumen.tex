@@ -1,0 +1,25 @@
+\section*{Resumen ejecutivo}
+\addcontentsline{toc}{section}{Resumen ejecutivo}
+
+El presente trabajo analiza tres series temporales mediante modelos de la familia ARIMA y
+un modelo de vectores autorregresivos. Dos de las series provienen de la infraestructura
+productiva de una plataforma comercial y registran, con frecuencia horaria, el volumen de
+solicitudes atendidas por un balanceador de carga y por una interfaz de punto de venta. La
+tercera proviene de la telemetría de vuelo de una aeronave no tripulada de ala fija y
+registra su altitud con frecuencia de un segundo.
+
+Las dos series de tráfico exhiben estacionalidad diaria con período de veinticuatro horas y
+quedan representadas por modelos SARIMA. La serie de altitud resulta un proceso integrado sin
+componente estacional y queda representada por un modelo ARIMA$(1,1,3)$, cuyos parámetros son
+significativos tanto individual como conjuntamente, y cuyos residuos no se distinguen del
+ruido blanco.
+
+El modelo de vectores autorregresivos se construye sobre las dos series de tráfico, únicas que
+comparten calendario. La especificación adoptada emplea dos rezagos, respaldada por los
+criterios bayesiano y de Hannan-Quinn. La prueba de causalidad de Granger arroja un resultado
+unidireccional: los rezagos de la serie de punto de venta contribuyen a explicar la serie del
+balanceador, mientras que la relación inversa no alcanza significatividad.
+
+Los principales límites del trabajo son el tamaño muestral de cada serie, el solapamiento de
+apenas trece días entre las dos series de tráfico, y la imposibilidad de incorporar la serie
+de altitud al modelo multivariado por corresponder a un calendario disjunto.

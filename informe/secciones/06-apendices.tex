@@ -1,0 +1,165 @@
+\appendix
+\section{Apéndice A. Material gráfico complementario}
+
+Las figuras de este apéndice documentan el análisis exploratorio de las series de tráfico. Se
+excluyeron del cuerpo por resultar redundantes respecto de figuras allí incluidas, o por
+referir a aspectos que el trabajo no modela.
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.85\textwidth]{alb_serie.png}
+\caption{Serie horaria del balanceador de carga, análisis exploratorio}
+\end{figure}
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.85\textwidth]{pos_serie.png}
+\caption{Serie horaria de punto de venta, análisis exploratorio}
+\end{figure}
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.85\textwidth]{alb_diaria.png}
+\caption{Agregación diaria de la serie del balanceador de carga}
+\end{figure}
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.85\textwidth]{pos_diaria.png}
+\caption{Agregación diaria de la serie de punto de venta}
+\end{figure}
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.85\textwidth]{alb_diasem.png}
+\caption{Patrón por día de la semana, serie del balanceador de carga}
+\end{figure}
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.85\textwidth]{pos_diasem.png}
+\caption{Patrón por día de la semana, serie de punto de venta}
+\end{figure}
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.85\textwidth]{alb_moviles.png}
+\caption{Media y desvío estándar móviles, serie del balanceador de carga}
+\end{figure}
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.85\textwidth]{pos_moviles.png}
+\caption{Media y desvío estándar móviles, serie de punto de venta}
+\end{figure}
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.85\textwidth]{alb_descomp.png}
+\caption{Descomposición estacional de la serie del balanceador de carga}
+\end{figure}
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.85\textwidth]{pos_descomp.png}
+\caption{Descomposición estacional de la serie de punto de venta}
+\end{figure}
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.85\textwidth]{trafico_traintest_1.png}
+\caption{Ajuste sobre el conjunto de prueba, serie del balanceador de carga}
+\end{figure}
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.85\textwidth]{trafico_traintest_2.png}
+\caption{Ajuste sobre el conjunto de prueba, serie de punto de venta}
+\end{figure}
+
+\section{Apéndice B. Rutinas de cómputo}
+
+\subsection*{Construcción de la serie de altitud}
+
+La rutina siguiente extrae la altitud del registro binario de telemetría, la lleva a una grilla
+regular de un segundo y aísla el tramo contiguo más extenso en vuelo.
+
+\begin{lstlisting}
+def leer_altitud(ruta):
+    """Extrae la altitud relativa, en metros, de un registro MAVLink."""
+    conexion = mavutil.mavlink_connection(ruta)
+    registros = []
+    while True:
+        mensaje = conexion.recv_match(type="GLOBAL_POSITION_INT")
+        if mensaje is None:
+            break
+        registros.append((mensaje._timestamp, mensaje.relative_alt / 1000.0))
+    crudo = pd.DataFrame(registros, columns=["timestamp", "altitud_m"])
+    crudo["timestamp"] = pd.to_datetime(crudo["timestamp"], unit="s")
+    return crudo.set_index("timestamp")["altitud_m"]
+
+
+def bloque_contiguo_mas_largo(mascara):
+    """Indices de inicio y fin del tramo contiguo mas largo que cumple la mascara."""
+    mejor_inicio, mejor_largo = 0, 0
+    inicio = None
+    for posicion, activo in enumerate(mascara):
+        if activo and inicio is None:
+            inicio = posicion
+        elif not activo and inicio is not None:
+            if posicion - inicio > mejor_largo:
+                mejor_inicio, mejor_largo = inicio, posicion - inicio
+            inicio = None
+    if inicio is not None and len(mascara) - inicio > mejor_largo:
+        mejor_inicio, mejor_largo = inicio, len(mascara) - inicio
+    return mejor_inicio, mejor_inicio + mejor_largo
+\end{lstlisting}
+
+\subsection*{Representación conjunta de las tres funciones}
+
+\begin{lstlisting}
+def graficar_fas_fac_facp(datos, titulo, rezagos=40):
+    """Grafica autocovarianza, autocorrelacion y parcial en una sola figura."""
+    figura, ejes = plt.subplots(1, 3, figsize=(13, 3.4))
+    autocovarianza = sm.tsa.acovf(datos, nlag=rezagos, fft=True)
+    ejes[0].stem(range(len(autocovarianza)), autocovarianza, basefmt=" ")
+    ejes[0].set_title("FAS - autocovarianza")
+    plot_acf(datos, lags=rezagos, ax=ejes[1], title="FAC - autocorrelacion")
+    plot_pacf(datos, lags=rezagos, ax=ejes[2], method="ywm",
+              title="FACP - autocorrelacion parcial")
+    figura.suptitle(titulo, y=1.05)
+    plt.tight_layout()
+    plt.show()
+\end{lstlisting}
+
+\subsection*{Comparación de especificaciones del modelo multivariado}
+
+La rutina siguiente evalúa cada orden de rezagos e invierte la transformación antes de calcular
+las métricas, de modo que el error quede expresado en la escala original.
+
+\begin{lstlisting}
+def evaluar(p, entrenamiento, prueba, log_original, alineadas, horizonte):
+    resultado = VAR(entrenamiento).fit(p)
+    pronostico = pd.DataFrame(
+        resultado.forecast(entrenamiento.values[-p:], horizonte),
+        index=prueba.index, columns=prueba.columns)
+    filas = []
+    for columna in prueba.columns:
+        historico = log_original[columna].copy()
+        prediccion = []
+        for i, t in enumerate(prueba.index):
+            base = historico.loc[t - pd.Timedelta(hours=24)]
+            valor = base + pronostico[columna].iloc[i]
+            historico.loc[t] = valor
+            prediccion.append(valor)
+        estimado = np.expm1(np.array(prediccion))
+        real = alineadas[columna].reindex(prueba.index).to_numpy()
+        filas.append({
+            "rezagos": p,
+            "serie": columna,
+            "MAE": np.mean(np.abs(estimado - real)),
+            "RMSE": np.sqrt(np.mean((estimado - real) ** 2)),
+            "MAPE": np.mean(np.abs((estimado - real) / real)) * 100,
+        })
+    return filas
+\end{lstlisting}

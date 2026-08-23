@@ -1,0 +1,89 @@
+\section{Introducción}
+
+\subsection{Planteo del problema}
+
+El análisis de series temporales persigue dos objetivos que conviene distinguir. El primero es
+descriptivo: comprender qué estructura gobierna la evolución de una magnitud a lo largo del
+tiempo, si esa estructura es estable y qué componentes la integran. El segundo es predictivo:
+anticipar valores futuros con una medida explícita de la incertidumbre asociada. Este trabajo
+aborda ambos sobre tres series de naturaleza distinta.
+
+La elección de series heterogéneas responde a un propósito deliberado. Un conjunto de datos
+que exhibe estacionalidad marcada y otro que carece por completo de ella exigen caminos de
+identificación diferentes, y contrastarlos ilumina mejor el método que repetir tres veces el
+mismo procedimiento sobre series equivalentes.
+
+\subsection{Origen de los datos}
+
+\subsubsection{Series de infraestructura productiva}
+
+Las dos primeras series provienen de la telemetría operativa de una plataforma comercial en
+producción y fueron registradas durante 2026.
+
+La primera contabiliza las solicitudes atendidas por hora por el balanceador de carga que
+recibe todo el tráfico entrante de la plataforma. Abarca las 744 horas del mes de julio de
+2026, expresadas en tiempo universal coordinado, sin interrupciones ni huecos. El volumen promedio ronda los 2,1 millones de solicitudes por hora
+\parencite{datos_alb}.
+
+La segunda contabiliza las solicitudes por hora dirigidas a cada destino de la interfaz de
+punto de venta. Abarca 720 horas comprendidas entre el 18 de julio y el 17 de agosto de 2026,
+también sin faltantes, con un volumen promedio cercano a las 830.000 solicitudes por destino
+y por hora \parencite{datos_pos}.
+
+Ambas fueron reindexadas sobre una grilla horaria completa antes del análisis. El
+procedimiento cumple una función diagnóstica además de correctiva: revela cualquier hueco
+temporal que de otro modo pasaría inadvertido, puesto que los modelos suponen observaciones
+equiespaciadas y una interrupción no declarada distorsionaría las funciones de autocorrelación.
+
+\subsubsection{Serie de telemetría de vuelo}
+
+La tercera serie procede del acervo ALFA, un conjunto de registros de telemetría de una
+aeronave no tripulada de ala fija recopilado por el Instituto de Robótica de la Universidad
+Carnegie Mellon \parencite{keipour2020}. El protocolo de comunicación transmite el estado de la
+aeronave a la estación de tierra y almacena cada mensaje precedido de una marca temporal con
+resolución de microsegundos.
+
+El acervo fue construido con una finalidad específica: proveer datos para la investigación en
+\textbf{detección de fallas y anomalías} en vehículos aéreos no tripulados. Comprende cuarenta y
+siete vuelos, veintitrés de los cuales presentan falla súbita de motor y veinticuatro
+corresponden a fallas de superficies de control \parencite{keipour2021}. Esa finalidad refuerza el interés analítico de la altitud: su predicción de corto plazo es justamente el insumo sobre el cual un sistema de supervisión detecta desviaciones respecto del comportamiento
+esperado.
+
+Los registros de telemetría en bruto, a diferencia de las secuencias procesadas del acervo, no
+incorporan etiquetas de falla, de modo que no cabe afirmar a partir de ellos si un vuelo
+determinado corresponde a un escenario nominal o a uno con falla inyectada. El vuelo analizado
+en este trabajo no exhibe, en todo caso, indicios de falla de motor: el acelerador permanece
+activo durante todo el tramo, con una media que oscila entre el veinte y el cuarenta y cinco por
+ciento según el minuto, y la velocidad aerodinámica media de 16,6 metros por segundo se mantiene
+próxima a la velocidad de crucero de quince metros por segundo que fijan los parámetros de
+configuración. La colección disponible comprende cuarenta y un registros repartidos en cinco
+jornadas de 2018.
+
+La variable analizada es la altitud relativa al punto de despegue, transmitida en milímetros
+y convertida a metros. Se prefirió esta magnitud sobre la altitud respecto del nivel del mar
+por tres razones: se lee directamente como altura de vuelo, se muestrea a mayor
+frecuencia, y permite detectar el contacto con el suelo sin conocer la elevación del campo.
+
+La construcción de la serie exigió dos decisiones. La primera consistió en aislar el tramo
+efectivamente en vuelo, puesto que la mayor parte de cada registro corresponde a la aeronave
+detenida en tierra, donde la altitud transmitida es únicamente deriva del barómetro. En uno de
+los vuelos examinados, el registro se extiende durante 2.880 segundos mientras la mediana de
+velocidad respecto del suelo alcanza apenas 0,16 metros por segundo. Modelar ese tramo
+equivaldría a modelar ruido de sensor. Se conservó, en consecuencia, el bloque contiguo más
+extenso con altitud superior a tres metros.
+
+La segunda decisión fue la frecuencia de análisis. La serie se llevó a una grilla regular de
+un segundo. Dado que la frecuencia nativa ronda los 4,15 hertz, la operación es un submuestreo y no introduce puntos interpolados. Una grilla más fina habría duplicado el número
+de observaciones al costo de interpolar, y esos puntos artificiales inflarían la
+autocorrelación de rezago corto, que es precisamente la magnitud sobre la cual se apoya la
+identificación del modelo.
+
+La serie resultante comprende 457 observaciones que recorren un perfil de vuelo completo,
+desde el despegue hasta el descenso, con altitudes entre 4,9 y 82,8 metros.
+
+\subsection{Organización del informe}
+
+El apartado siguiente expone el marco teórico. El posterior desarrolla el análisis, organizado
+según los doce puntos que estructuran el trabajo. Las conclusiones sintetizan los hallazgos y
+delimitan su alcance. Los apéndices reúnen el material gráfico complementario y las rutinas de
+cómputo extensas.

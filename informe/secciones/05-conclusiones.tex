@@ -1,0 +1,90 @@
+\section{Conclusiones}
+
+\subsection{Hallazgos principales}
+
+El trabajo modeló tres series de naturaleza distinta y obtuvo resultados de calidad desigual,
+circunstancia que conviene exponer sin uniformar.
+
+Las dos series de tráfico presentan estacionalidad diaria inequívoca, con período de
+veinticuatro horas, verificada tanto por la inspección del perfil horario como por los picos de
+la función de autocorrelación en los rezagos 24, 48 y 72. Los modelos SARIMA seleccionados
+alcanzan errores porcentuales del 0,79 y del 3,90 por ciento sobre un horizonte de 48 horas,
+magnitudes aceptables para una serie de tráfico operativo.
+
+Ese desempeño, sin embargo, convive con un diagnóstico de residuos desfavorable. La prueba de
+Ljung-Box rechaza la incorrelación a partir del rezago 24 en la serie del balanceador, y en
+todos los rezagos examinados en la serie de punto de venta. Ambos modelos dejan estructura sin
+explicar, concentrada en los rezagos estacionales. Los pronósticos merecen, por lo tanto, menor
+confianza que la sugerida por sus métricas de error.
+
+La serie de altitud presenta el comportamiento opuesto. Sin componente estacional, es un proceso integrado que una sola diferencia regular vuelve
+estacionario. El modelo
+ARIMA$(1,1,3)$ exhibe parámetros significativos tanto individual como conjuntamente, y sus
+residuos no se distinguen del ruido blanco en ningún rezago examinado. Es el único de los tres que supera el diagnóstico sin reservas.
+
+El modelo multivariado, construido sobre las dos series de tráfico con dos rezagos, arroja una
+relación de precedencia unidireccional: los rezagos de la serie de punto de venta contribuyen a
+explicar la del balanceador, sin reciprocidad.
+
+\subsection{Dos lecciones metodológicas}
+
+Dos episodios del trabajo trascienden el resultado particular.
+
+El primero es la selección del orden en el modelo multivariado. El criterio de Akaike sugería
+24 rezagos, esto es, 98 parámetros estimados a partir de 241 observaciones. La especificación
+resultante predecía peor que una de diez parámetros. Los criterios de información orientan, no dictaminan, y ante discrepancia entre ellos el desempeño fuera de muestra es el árbitro más confiable. La misma tensión reapareció, con menor intensidad, al
+seleccionar el modelo estacional de la serie de punto de venta.
+
+El segundo es de orden más elemental: una métrica mal elegida puede invertir por completo la
+lectura de un resultado. El error porcentual absoluto medio del 97,20 por ciento que arrojaba
+el modelo multivariado no medía su calidad sino la inadecuación de aplicar una métrica relativa
+sobre una serie que oscila alrededor de cero. Expresado en la escala original, el mismo modelo
+alcanza un error del 1,31 por ciento.
+
+\subsection{Límites del trabajo}
+
+\begin{enumerate}
+\item \textbf{Tamaño muestral.} Las series de tráfico abarcan aproximadamente un mes, y la de
+altitud, 457 observaciones. Ninguna admite validación mediante ventanas móviles ni evaluación
+sobre múltiples horizontes independientes.
+
+\item \textbf{Estacionalidad semanal no modelada.} El mapa de calor revela que la serie del
+balanceador presenta niveles sensiblemente inferiores los días miércoles y jueves. Un período
+muestral de un mes ofrece apenas cuatro repeticiones de cada día de la semana, cantidad
+insuficiente para estimar una componente estacional de período 168. La autocorrelación residual detectada en el diagnóstico encaja con esa omisión.
+
+\item \textbf{Solapamiento limitado entre las series de tráfico.} La intersección temporal
+abarca trece días y 289 observaciones tras la transformación. Toda conclusión del modelo
+multivariado queda condicionada por esa brevedad.
+
+\item \textbf{Calendarios disjuntos.} La serie de altitud no participa del modelo multivariado
+por corresponder a un período que no solapa con el de las restantes. La limitación es
+estructural y no admite solución dentro de los datos disponibles.
+
+\item \textbf{Alcance de la causalidad de Granger.} El contraste establece precedencia temporal
+con contenido predictivo. No autoriza a afirmar que una serie cause a la otra en sentido
+estructural.
+
+\item \textbf{Un único vuelo.} Los resultados de la serie de altitud describen ese vuelo. No se
+generalizan a otros vuelos ni a otras aeronaves.
+
+\item \textbf{Normalidad de los residuos.} El contraste de Jarque-Bera rechaza la normalidad en
+el modelo de la serie de altitud. Los intervalos de predicción nominales son, por eso, aproximados.
+\end{enumerate}
+
+\subsection{Líneas de trabajo futuro}
+
+La limitación de mayor peso es la brevedad del período muestral, y corregirla destrabaría las
+restantes. Un año de registro permitiría estimar la componente semanal cuya ausencia se
+manifiesta en la autocorrelación residual, y ampliaría el solapamiento entre las series de
+tráfico hasta un tamaño donde el modelo multivariado admitiera órdenes superiores sin
+comprometer la fiabilidad.
+
+En segundo término, el modelo del balanceador se puede simplificar. Los
+parámetros de la parte regular carecen de significatividad, de modo que una especificación
+$(0,1,0)\times(1,1,1)_{24}$ alcanzaría un ajuste equivalente con dos parámetros menos.
+
+Por último, la serie de altitud ofrece una extensión natural que este trabajo no exploró: la telemetría de vuelo registra en paralelo la velocidad aerodinámica junto con la
+altitud, y ambas magnitudes están vinculadas por el intercambio entre energía potencial y
+cinética. Un modelo multivariado sobre ese par contaría con series perfectamente alineadas y
+con una interpretación física directa de la función impulso-respuesta.

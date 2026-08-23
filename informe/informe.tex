@@ -1,0 +1,135 @@
+\documentclass[doc,11pt,donotrepeattitle]{apa7}
+
+% --- Idioma y tipografía ---
+\usepackage[spanish,es-noquoting,es-tabla]{babel}
+\usepackage{fontspec}
+\usepackage{csquotes}
+
+% --- Formato de página ---
+\geometry{margin=2.54cm}
+\usepackage{setspace}
+\onehalfspacing
+
+% --- Contenido ---
+\usepackage{amsmath}
+\usepackage{booktabs}
+\usepackage{graphicx}
+\usepackage{longtable}
+\usepackage{array}
+\usepackage{listings}
+\usepackage{xcolor}
+
+% --- Bibliografía en normas APA ---
+\usepackage[style=apa,backend=biber,sortcites=true]{biblatex}
+\addbibresource{bibliografia.bib}
+
+\hypersetup{hidelinks}
+
+% --- Estilo de los fragmentos de código ---
+\definecolor{codefondo}{HTML}{F6F8FA}
+\definecolor{codecomentario}{HTML}{6A737D}
+\definecolor{codepalabra}{HTML}{005CC5}
+\definecolor{codetexto}{HTML}{032F62}
+\lstset{
+  language=Python,
+  basicstyle=\ttfamily\footnotesize,
+  keywordstyle=\color{codepalabra},
+  commentstyle=\itshape\color{codecomentario},
+  stringstyle=\color{codetexto},
+  backgroundcolor=\color{codefondo},
+  frame=single,
+  rulecolor=\color{codecomentario!40},
+  numbers=none,
+  breaklines=true,
+  showstringspaces=false,
+  captionpos=b,
+  xleftmargin=0.5em,
+  xrightmargin=0.5em,
+  aboveskip=1em,
+  belowskip=1em,
+  literate={á}{{\'a}}1 {é}{{\'e}}1 {í}{{\'i}}1 {ó}{{\'o}}1 {ú}{{\'u}}1
+           {ñ}{{\~n}}1 {Á}{{\'A}}1 {É}{{\'E}}1 {Í}{{\'I}}1 {Ó}{{\'O}}1
+           {Ú}{{\'U}}1 {Ñ}{{\~N}}1 {¿}{{?`}}1 {¡}{{!`}}1
+}
+
+\renewcommand{\lstlistingname}{Código}
+\renewcommand{\lstlistlistingname}{Índice de código}
+
+\graphicspath{{figuras/}}
+
+\title{Análisis de series temporales de infraestructura productiva y de telemetría de vuelo}
+\shorttitle{Análisis de series temporales}
+\author{}
+\affiliation{}
+
+\begin{document}
+
+% ============ i. CARÁTULA ============
+\thispagestyle{empty}
+\begin{center}
+\vspace*{3.5cm}
+
+{\Large\bfseries Análisis de series temporales de infraestructura\\[0.3em]
+productiva y de telemetría de vuelo\par}
+
+\vspace{1.2cm}
+{\large Trabajo Práctico N.º 1\par}
+
+\vspace{2.5cm}
+{\large Análisis de Series Temporales\par}
+\vspace{0.4em}
+{\large Maestría en Ciencia de Datos\par}
+\vspace{0.4em}
+{\large Universidad Austral\par}
+
+\vspace{2.5cm}
+\textbf{Docentes}\par
+\vspace{0.4em}
+Rodrigo Del Rosso\par
+Sebastián Calcagno\par
+Brian Drago\par
+
+\vspace{2.5cm}
+\textbf{Integrantes}\par
+\vspace{0.4em}
+Carlos Aular\par
+\vspace{0.3em}
+Juan Manuel Pedrozo\par
+
+\vfill
+Agosto de 2026
+\end{center}
+\newpage
+\setcounter{page}{1}
+
+% ============ ii. RESUMEN EJECUTIVO ============
+\input{secciones/01-resumen}
+
+% ============ iii. ÍNDICE DE CONTENIDO ============
+\newpage
+\tableofcontents
+\newpage
+\listoffigures
+\listoftables
+\newpage
+
+% ============ iv. INTRODUCCIÓN ============
+\input{secciones/02-introduccion}
+
+% ============ v. MARCO TEÓRICO ============
+\input{secciones/03-marco-teorico}
+
+% ============ vi. ANÁLISIS DE RESULTADOS ============
+\input{secciones/04-analisis}
+
+% ============ vii. CONCLUSIONES ============
+\input{secciones/05-conclusiones}
+
+% ============ viii. REFERENCIAS BIBLIOGRÁFICAS ============
+\newpage
+\printbibliography[title={Referencias bibliográficas}, heading=bibintoc]
+
+% ============ ix. APÉNDICES ============
+\input{secciones/06-apendices}
+
+\end{document}

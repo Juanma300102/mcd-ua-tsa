@@ -5,3 +5,14 @@ __pycache__/
 
 
 data/*
+# Archivos auxiliares de LaTeX
+*.aux
+*.bbl
+*.bcf
+*.blg
+*.lof
+*.log
+*.lot
+*.out
+*.run.xml
+*.toc

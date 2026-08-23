@@ -8,6 +8,7 @@ dependencies = [
     "notebook>=7.6.2",
     "numpy>=2.5.2",
     "pandas>=3.0.5",
+    "pymavlink>=2.4.49",
     "seaborn>=0.13.2",
     "statsmodels>=0.14.6",
     "yfinance>=1.6.0",

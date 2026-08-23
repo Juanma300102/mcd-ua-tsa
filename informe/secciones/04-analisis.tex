@@ -1,0 +1,626 @@
+\section{Análisis de resultados}
+
+\subsection{Elección de las series y contexto (punto 1)}
+
+Las tres series analizadas y sus características básicas se resumen en la
+Tabla~\ref{tab:series}. Los motivos de su elección y el origen de cada una se expusieron en la introducción.
+
+\begin{table}[htbp]
+\centering
+\caption{Series analizadas}
+\label{tab:series}
+\small
+\begin{tabular}{lrrrrr}
+\toprule
+\textbf{Serie} & \textbf{Obs.} & \textbf{Frecuencia} & \textbf{Mínimo} & \textbf{Media} & \textbf{Máximo} \\
+\midrule
+Balanceador de carga & 744 & horaria & 883.045 & 2.114.963 & 2.536.631 \\
+Punto de venta & 720 & horaria & 318.308 & 829.950 & 924.147 \\
+Altitud de vuelo (m) & 457 & 1 Hz & 4,9 & 46,9 & 82,8 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+El fragmento siguiente resume la carga de las series horarias. La reindexación sobre una
+grilla completa cumple una función diagnóstica: revela huecos temporales que de otro modo
+pasarían inadvertidos y que distorsionarían las funciones de autocorrelación.
+
+\begin{lstlisting}[caption={Carga y reindexación sobre grilla horaria completa}]
+serie = df.set_index("period_start_utc")[columna].astype(float)
+indice = pd.date_range(serie.index.min(), serie.index.max(), freq="h", tz="UTC")
+serie = serie.reindex(indice).interpolate("time")
+\end{lstlisting}
+
+En el caso de la telemetría de vuelo, la construcción exige además aislar el tramo en vuelo.
+El fragmento siguiente extrae la altitud del registro binario y descarta los tramos en tierra.
+
+\begin{lstlisting}[caption={Extracción de la altitud y aislamiento del tramo en vuelo}]
+while (mensaje := conexion.recv_match(type="GLOBAL_POSITION_INT")) is not None:
+    registros.append((mensaje._timestamp, mensaje.relative_alt / 1000.0))
+por_segundo = crudo.resample("1s").mean()
+desde, hasta = bloque_contiguo_mas_largo((por_segundo > 3.0).to_numpy())
+\end{lstlisting}
+
+\subsection{Series originales y necesidad de diferenciar (punto 2)}
+
+\subsubsection{Series de tráfico}
+
+La Figura~\ref{fig:trafico_niveles} presenta ambas series de tráfico en niveles. El rasgo
+dominante es una oscilación regular que se repite cada veinticuatro horas, superpuesta a
+fluctuaciones de mayor frecuencia.
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=\textwidth]{trafico_niveles.png}
+\caption{Series de tráfico en niveles, con frecuencia horaria}
+\label{fig:trafico_niveles}
+\end{figure}
+
+La naturaleza de esa oscilación se aprecia con mayor claridad en la
+Figura~\ref{fig:perfil_horario}, que promedia el volumen para cada hora del día. Ambas series
+describen un valle nocturno y un máximo vespertino. El balanceador alcanza su mínimo a las
+07:00 y su máximo a las 21:00; la interfaz de punto de venta, su mínimo a las 08:00 y su
+máximo a las 19:00. La amplitud del ciclo supera el diez por ciento del nivel medio, magnitud
+que no admite tratarse como ruido.
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=\textwidth]{panel_perfil_horario.png}
+\caption{Perfil medio por hora del día. La banda representa el rango intercuartílico; las líneas verticales señalan el máximo y el mínimo}
+\label{fig:perfil_horario}
+\end{figure}
+
+La Figura~\ref{fig:heatmap} despliega la misma información sobre dos dimensiones y confirma la
+regularidad del ciclo diario a lo largo de toda la semana.
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=\textwidth]{panel_heatmap.png}
+\caption{Solicitudes medias según día de la semana y hora del día}
+\label{fig:heatmap}
+\end{figure}
+
+Esta última figura revela además un rasgo que el trabajo no modela: en la serie del
+balanceador, los días miércoles y jueves presentan niveles sensiblemente inferiores al resto
+de la semana. Existe, por lo tanto, un efecto de día de la semana además del ciclo diario. El
+período muestral de un mes ofrece apenas cuatro repeticiones de cada día, cantidad insuficiente
+para estimar con fiabilidad una componente estacional de período 168. La limitación se retoma
+en las conclusiones.
+
+La Figura~\ref{fig:trafico_diferencias} compara el efecto de distintos esquemas de
+diferenciación. La diferencia estacional de veinticuatro horas elimina el ciclo; la aplicación
+adicional de una diferencia regular corrige el desplazamiento residual del nivel.
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=\textwidth]{trafico_diferencias.png}
+\caption{Efecto de la diferencia estacional y de su combinación con la diferencia regular}
+\label{fig:trafico_diferencias}
+\end{figure}
+
+\subsubsection{Serie de altitud}
+
+La Figura~\ref{fig:uav_niveles} presenta la serie de altitud en niveles y su primera
+diferencia. El comportamiento difiere por completo del anterior: no hay ciclo repetitivo sino
+un recorrido con fases sucesivas de despegue, ascenso, crucero y descenso. La media se desplaza sin retorno, señal visual de no estacionariedad. La primera
+diferencia oscila en torno a cero con dispersión estable.
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=\textwidth]{uav_niveles_diff.png}
+\caption{Altitud relativa del vuelo en niveles y en primera diferencia}
+\label{fig:uav_niveles}
+\end{figure}
+
+\subsection{Funciones de autocovarianza, autocorrelación y autocorrelación parcial (punto 3)}
+
+La Figura~\ref{fig:trafico_facs} presenta las tres funciones para las series de tráfico. El
+rasgo determinante son los picos pronunciados en los rezagos 24, 48 y 72, que confirman la
+periodicidad diaria y fijan el período estacional en $s = 24$. La autocorrelación no decae
+hacia cero entre esos picos, lo cual indica que la componente estacional domina la estructura.
+La Figura~\ref{fig:pos_facs} reproduce el mismo conjunto para la serie de punto de venta, con
+un patrón equivalente.
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=\textwidth]{trafico_fasfacfacp_1.png}
+\caption{Funciones FAS, FAC y FACP de la serie del balanceador de carga}
+\label{fig:trafico_facs}
+\end{figure}
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=\textwidth]{trafico_fasfacfacp_2.png}
+\caption{Funciones FAS, FAC y FACP de la serie de punto de venta}
+\label{fig:pos_facs}
+\end{figure}
+
+La Figura~\ref{fig:uav_facs} presenta el mismo conjunto para la serie de altitud, en niveles y
+tras diferenciar. El contraste ilustra el concepto expuesto en el marco teórico con más claridad que cualquier descripción. En niveles, la autocorrelación de primer orden alcanza 0,96 y decae con
+lentitud casi lineal, mientras la parcial exhibe un primer rezago cercano a la unidad y se
+corta de inmediato. La teoría asocia ese par de patrones a un proceso integrado: la
+persistencia no proviene de una memoria autorregresiva de orden elevado sino de la presencia de
+una raíz unitaria, y el remedio es la diferenciación.
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.92\textwidth]{uav_fasfacfacp_1.png}
+\caption{Funciones FAS, FAC y FACP de la altitud en niveles}
+\label{fig:uav_facs}
+\end{figure}
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.92\textwidth]{uav_fasfacfacp_2.png}
+\caption{Funciones FAS, FAC y FACP de la altitud tras una diferencia regular}
+\label{fig:uav_facs_diff}
+\end{figure}
+
+Tras la diferenciación, la autocorrelación pierde la persistencia y conserva significatividad
+únicamente en los primeros rezagos, patrón compatible con una componente de medias móviles de orden bajo. El material identificado, visible en la Figura~\ref{fig:uav_facs_diff}, corresponde a un
+modelo ARIMA$(p,1,q)$ con órdenes reducidos.
+
+\subsection{Pruebas de raíces unitarias (punto 4)}
+
+La Tabla~\ref{tab:raices} reúne los resultados de ambos contrastes sobre las series de tráfico
+en sus distintas versiones.
+
+\begin{table}[htbp]
+\centering
+\caption{Contrastes de raíces unitarias sobre las series de tráfico}
+\label{tab:raices}
+\small
+\begin{tabular}{llrrrr}
+\toprule
+\textbf{Serie} & \textbf{Versión} & \textbf{ADF} & \textbf{$p$} & \textbf{KPSS} & \textbf{$p$} \\
+\midrule
+Balanceador & original & $-4{,}53$ & 0,00 & 0,41 & 0,07 \\
+Balanceador & difer. regular & $-9{,}70$ & 0,00 & 0,17 & 0,10 \\
+Balanceador & difer. estacional & $-7{,}56$ & 0,00 & 0,54 & 0,03 \\
+Balanceador & ambas diferencias & $-10{,}10$ & 0,00 & 0,02 & 0,10 \\
+\addlinespace
+Punto de venta & original & $-9{,}55$ & 0,00 & 2,33 & 0,01 \\
+Punto de venta & difer. regular & $-10{,}82$ & 0,00 & 0,13 & 0,10 \\
+Punto de venta & difer. estacional & $-6{,}21$ & 0,00 & 0,02 & 0,10 \\
+Punto de venta & ambas diferencias & $-10{,}43$ & 0,00 & 0,24 & 0,10 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+La lectura conjunta revela un matiz que un contraste aislado ocultaría. Sobre la serie del
+balanceador en niveles, ambas pruebas coinciden en la estacionariedad. Sobre la serie de punto
+de venta en niveles, en cambio, discrepan: la prueba de Dickey-Fuller aumentada rechaza la
+raíz unitaria, pero la KPSS rechaza también la estacionariedad. Esa configuración es típica de series con componente estacional marcada, donde cada contraste interpreta la estructura periódica de un modo distinto.
+
+El caso de la serie de altitud aporta un tercer escenario. La prueba de Dickey-Fuller aumentada
+arroja $p = 0{,}1237$ y no rechaza la raíz unitaria; la KPSS arroja $p \geq 0{,}10$ y tampoco
+rechaza la estacionariedad. Ninguna de las dos se pronuncia.
+
+Ante esa indefinición, la decisión de diferenciar se sostiene sobre tres elementos
+convergentes: el desplazamiento visible de la media, el decaimiento lento de la autocorrelación
+junto con el corte abrupto de la parcial, y la ausencia de rechazo por parte de la prueba de
+Dickey-Fuller aumentada. La literatura recomienda diferenciar ante evidencia de raíz unitaria,
+porque sobrediferenciar cuesta menos que estimar sobre una serie integrada \parencite{hyndman2021}.
+
+El resultado decisivo aparece tras la diferenciación. La prueba de Ljung-Box aplicada a la
+serie de altitud diferenciada arroja $p = 1{,}115 \times 10^{-62}$ y rechaza la incorrelación sin margen de duda. Subsiste, por lo tanto, estructura autocorrelacionada genuina, y
+existe un modelo por estimar.
+
+\begin{lstlisting}[caption={Aplicación conjunta de ambos contrastes}]
+p_adf = adfuller(datos)[1]            # H0: existe raiz unitaria
+p_kpss = kpss(datos, nlags="auto")[1] # H0: la serie es estacionaria
+\end{lstlisting}
+
+\subsection{Estimación y selección de modelos (punto 5)}
+
+\subsubsection{Series de tráfico}
+
+Se estimó una grilla de modelos SARIMA con período estacional $s = 24$, con distintas
+combinaciones de diferencia regular y estacional. La Tabla~\ref{tab:sarima} presenta los ocho
+modelos resultantes.
+
+La comparación emplea dos criterios complementarios. Los criterios de información miden el
+ajuste dentro de la muestra y penalizan la cantidad de parámetros; el desempeño sobre el
+conjunto de prueba evalúa la capacidad predictiva efectiva. Cuando ambos coinciden, la elección es inmediata; cuando discrepan, se privilegia el desempeño fuera de muestra, que atiende directamente a la finalidad predictiva del modelo.
+
+\begin{table}[htbp]
+\centering
+\caption{Comparación de modelos SARIMA estimados}
+\label{tab:sarima}
+\small
+\begin{tabular}{llrrrr}
+\toprule
+\textbf{Serie} & \textbf{Modelo} & \textbf{AIC} & \textbf{BIC} & \textbf{MAE} & \textbf{MAPE} \\
+\midrule
+Balanceador & $\mathbf{(1,1,1)\times(1,1,1)_{24}}$ & \textbf{15.491,11} & 15.513,46 & \textbf{16.662} & \textbf{0,79\,\%} \\
+Balanceador & $(1,0,1)\times(1,1,1)_{24}$ & 15.527,20 & 15.549,55 & 26.776 & 1,26\,\% \\
+Balanceador & $(1,1,1)\times(1,0,1)_{24}$ & 16.229,29 & 16.251,82 & 76.284 & 3,74\,\% \\
+Balanceador & $(1,0,1)\times(1,0,1)_{24}$ & 16.264,80 & 16.287,34 & 74.059 & 3,64\,\% \\
+\addlinespace
+Punto de venta & $(1,0,1)\times(1,1,1)_{24}$ & \textit{15.381,30} & 15.403,47 & 39.594 & 5,09\,\% \\
+Punto de venta & $(1,1,1)\times(1,1,1)_{24}$ & 15.467,63 & 15.489,79 & 45.861 & 5,91\,\% \\
+Punto de venta & $\mathbf{(1,1,1)\times(1,0,1)_{24}}$ & 15.737,10 & 15.759,45 & \textbf{29.641} & \textbf{3,90\,\%} \\
+Punto de venta & $(1,0,1)\times(1,0,1)_{24}$ & 15.860,56 & 15.882,91 & 30.840 & 4,08\,\% \\
+\bottomrule
+\end{tabular}
+
+
+\vspace{0.4em}
+{\footnotesize\textit{Nota.} En negrita, el modelo seleccionado para cada serie. En cursiva, el
+valor mínimo del criterio de Akaike cuando no corresponde al modelo seleccionado.\par}
+\end{table}
+
+En la serie del balanceador ambos criterios coinciden: la especificación
+$(1,1,1)\times(1,1,1)_{24}$ minimiza simultáneamente el criterio de Akaike y el error de
+predicción.
+
+En la serie de punto de venta, en cambio, \textbf{los criterios discrepan}. El de Akaike favorece la
+especificación $(1,0,1)\times(1,1,1)_{24}$, con un valor de 15.381,30; el desempeño sobre el
+conjunto de prueba favorece $(1,1,1)\times(1,0,1)_{24}$, cuyo error porcentual absoluto medio cae casi un tercio, 3,90 frente a 5,09 por ciento.
+
+Se adopta esta última. La discrepancia admite una lectura sustantiva: la diferencia estacional
+mejora el ajuste dentro de la muestra pero deteriora la predicción, comportamiento característico
+de una componente estacional menos estable que en la serie del balanceador. El criterio empleado
+es el mismo que se aplica más adelante al seleccionar el orden del modelo multivariado, donde la
+divergencia entre criterios se manifiesta con mayor intensidad.
+
+El examen de significatividad individual deja un resultado incómodo, que este informe prefiere
+exponer antes que atenuar. En el modelo del balanceador, los parámetros de la parte regular carecen de
+significatividad: el coeficiente autorregresivo alcanza $-0{,}08$ con $p = 0{,}97$, y el de
+medias móviles $0{,}01$ con $p = 1{,}00$. Los parámetros estacionales, en cambio, son
+altamente significativos: $-0{,}15$ con $p < 0{,}001$ para el autorregresivo y $-0{,}52$ con
+$p < 0{,}001$ para el de medias móviles.
+
+La lectura es que la estructura de la serie reside casi por completo en su componente
+estacional, y la parte regular del modelo sobra. Una especificación
+$(0,1,0)\times(1,1,1)_{24}$ habría alcanzado un ajuste equivalente con dos parámetros menos.
+
+\subsubsection{Serie de altitud}
+
+Sobre la serie de altitud se estimó una grilla ARIMA$(p,1,q)$ con órdenes entre cero y tres.
+El criterio de Akaike selecciona ARIMA$(1,1,3)$, con un valor de 1.379,95.
+
+\begin{lstlisting}[caption={Grilla de modelos y selección por criterio de información}]
+for p in range(4):
+    for q in range(4):
+        ajuste = ARIMA(entrenamiento, order=(p, 1, q)).fit()
+        resultados.append({"modelo": f"ARIMA({p},1,{q})", "AIC": ajuste.aic})
+\end{lstlisting}
+
+A diferencia del caso anterior, los cuatro parámetros son individualmente significativos al cinco
+por ciento, según se detalla en la Tabla~\ref{tab:uav_params}.
+
+\begin{table}[htbp]
+\centering
+\caption{Parámetros del modelo ARIMA$(1,1,3)$ de la serie de altitud}
+\label{tab:uav_params}
+\small
+\begin{tabular}{lrrrr}
+\toprule
+\textbf{Parámetro} & \textbf{Coeficiente} & \textbf{Error estándar} & \textbf{$z$} & \textbf{$P>|z|$} \\
+\midrule
+$\phi_1$ & $-0{,}2650$ & 0,120 & $-2{,}208$ & 0,027 \\
+$\theta_1$ & 1,6263 & 0,113 & 14,432 & $<0{,}001$ \\
+$\theta_2$ & 1,2023 & 0,136 & 8,821 & $<0{,}001$ \\
+$\theta_3$ & 0,4268 & 0,061 & 6,959 & $<0{,}001$ \\
+$\sigma^2$ & 1,3022 & 0,051 & 25,344 & $<0{,}001$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+La significatividad conjunta se evaluó mediante el contraste de razón de verosimilitud contra
+el modelo restringido ARIMA$(0,1,0)$, equivalente a un paseo aleatorio sin parámetros. El
+estadístico alcanza 567,11 con cuatro grados de libertad y un valor $p$ del orden de
+$2 \times 10^{-121}$. La hipótesis nula de nulidad conjunta se rechaza sin margen de duda.
+
+\begin{lstlisting}[caption={Contraste de significatividad global por razón de verosimilitud}]
+modelo_nulo = ARIMA(entrenamiento, order=(0, 1, 0)).fit()
+estadistico_lr = 2 * (modelo.llf - modelo_nulo.llf)
+p_valor = stats.chi2.sf(estadistico_lr, len(modelo.params) - len(modelo_nulo.params))
+\end{lstlisting}
+
+\subsection{Desempeño y comparación entre modelos (puntos 6 y 7)}
+
+La partición entre entrenamiento y prueba reservó las últimas 48 horas en las series de
+tráfico y los últimos 15 segundos en la de altitud. Ambos horizontes guardan proporción con la
+frecuencia de muestreo y con el tamaño de la muestra. La Tabla~\ref{tab:metricas} reúne el
+desempeño de los modelos seleccionados.
+
+\begin{table}[htbp]
+\centering
+\caption{Desempeño de los modelos seleccionados sobre el conjunto de prueba}
+\label{tab:metricas}
+\small
+\begin{tabular}{llrrr}
+\toprule
+\textbf{Serie} & \textbf{Modelo} & \textbf{MAE} & \textbf{RMSE} & \textbf{MAPE} \\
+\midrule
+Balanceador & SARIMA$(1,1,1)\times(1,1,1)_{24}$ & 16.662 & 20.310 & 0,79\,\% \\
+Punto de venta & SARIMA$(1,1,1)\times(1,0,1)_{24}$ & 29.641 & 58.454 & 3,90\,\% \\
+Altitud (m) & ARIMA$(1,1,3)$ & 6,01 & 7,53 & --- \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+La comparación entre modelos, presentada en la Tabla~\ref{tab:sarima}, muestra cuánto separa a las especificaciones con diferencia estacional de las que carecen de ella. En la serie del balanceador, el error absoluto medio se multiplica por cuatro al
+omitirla. La componente estacional es, pues, el elemento decisivo.
+
+En el caso de la serie de altitud, las diferencias entre órdenes vecinos son mínimas: los
+cuatro mejores modelos por criterio de Akaike presentan errores absolutos medios comprendidos
+entre 5,99 y 6,01 metros. El desempeño predictivo no discrimina, y el criterio de información
+opera como desempate en favor de la especificación más parsimoniosa.
+
+Corresponde advertir que el conjunto de prueba de la serie de altitud coincide con la fase de
+descenso, dinámicamente distinta del crucero donde el modelo se entrena en su mayor parte. La métrica obtenida peca, pues, de conservadora.
+
+\subsection{Diagnóstico de residuos (punto 8)}
+
+El diagnóstico arroja resultados netamente distintos entre las series de tráfico y la de
+altitud, y conviene exponerlos por separado.
+
+\subsubsection{Series de tráfico}
+
+La Tabla~\ref{tab:ljung_trafico} presenta la prueba de Ljung-Box sobre los residuos de ambos
+modelos.
+
+\begin{table}[htbp]
+\centering
+\caption{Prueba de Ljung-Box sobre los residuos de los modelos SARIMA}
+\label{tab:ljung_trafico}
+\small
+\begin{tabular}{lrrl}
+\toprule
+\textbf{Serie} & \textbf{Rezago} & \textbf{Estadístico} & \textbf{$p$} \\
+\midrule
+Balanceador & 12 & 17,40 & 0,14 \\
+Balanceador & 24 & 43,64 & 0,01 \\
+Balanceador & 48 & 212,49 & $<0{,}001$ \\
+\addlinespace
+Punto de venta & 12 & 86,58 & $<0{,}001$ \\
+Punto de venta & 24 & 92,07 & $<0{,}001$ \\
+Punto de venta & 48 & 112,38 & $<0{,}001$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+El resultado es desfavorable y así debe consignarse. En la serie del balanceador, los
+residuos superan el contraste hasta el rezago 12, pero lo incumplen a partir del rezago 24. En
+la serie de punto de venta, el rechazo se verifica en todos los rezagos examinados.
+
+La implicación es que ambos modelos dejan estructura sin explicar, concentrada en los rezagos
+correspondientes al ciclo diario y a sus múltiplos. El patrón concuerda con lo observado en el mapa de calor: existe una componente semanal que los
+modelos no capturan, y que se manifiesta como autocorrelación residual en los rezagos
+estacionales.
+
+Las Figuras~\ref{fig:res_alb} y~\ref{fig:res_pos} muestran ese comportamiento: la función de
+autocorrelación de los residuos conserva coeficientes significativos en los rezagos múltiplos
+de veinticuatro.
+
+En consecuencia, los pronósticos de estas dos series deben interpretarse con menor confianza
+que la sugerida por sus métricas de error, y los intervalos de predicción son probablemente demasiado estrechos.
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=\textwidth]{trafico_residuos_1.png}
+\caption{Diagnóstico de residuos del modelo de la serie del balanceador de carga}
+\label{fig:res_alb}
+\end{figure}
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=\textwidth]{trafico_residuos_2.png}
+\caption{Diagnóstico de residuos del modelo de la serie de punto de venta}
+\label{fig:res_pos}
+\end{figure}
+
+\subsubsection{Serie de altitud}
+
+El diagnóstico del modelo ARIMA$(1,1,3)$ arroja el resultado opuesto. La prueba de Ljung-Box no
+rechaza la incorrelación en ninguno de los rezagos examinados: $p = 0{,}976$ en el rezago 10,
+$p = 0{,}631$ en el 20 y $p = 0{,}487$ en el 30. Los residuos tienen media de 0,0136 metros y desvío estándar de 1,1644 metros.
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=\textwidth]{uav_residuos.png}
+\caption{Diagnóstico de residuos del modelo de la serie de altitud}
+\label{fig:res_uav}
+\end{figure}
+
+La Figura~\ref{fig:res_uav} confirma el resultado: los coeficientes de la función de
+autocorrelación de los residuos permanecen dentro de la banda de significatividad, y el
+gráfico temporal no evidencia cambios sistemáticos de nivel ni de dispersión.
+
+El modelo no deja estructura autocorrelacionada sin explicar. El contraste de Jarque-Bera \parencite{jarque1980}, en
+cambio, rechaza la normalidad con un estadístico de 431,74, asimetría de 0,51 y curtosis de
+7,74. Los apartamientos se concentran en las colas y se explican por las maniobras del vuelo; afectan la validez de los intervalos de confianza nominales, no la estimación puntual.
+
+\subsection{Pronósticos (punto 9)}
+
+La Figura~\ref{fig:pron_trafico} presenta los pronósticos a 48 horas de las series de tráfico.
+El horizonte equivale a dos ciclos diarios completos, ventana que permite verificar si el
+modelo reproduce la periodicidad sin extrapolar en exceso. La Figura~\ref{fig:pron_pos}
+presenta el correspondiente a la serie de punto de venta.
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=\textwidth]{trafico_pronostico_1.png}
+\caption{Pronóstico a 48 horas de la serie del balanceador de carga}
+\label{fig:pron_trafico}
+\end{figure}
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=\textwidth]{trafico_pronostico_2.png}
+\caption{Pronóstico a 48 horas de la serie de punto de venta}
+\label{fig:pron_pos}
+\end{figure}
+
+La Figura~\ref{fig:pron_uav} presenta el pronóstico a 15 segundos de la serie de altitud. El
+horizonte responde a la frecuencia de un hertz y al tamaño de la muestra, y representa poco más
+del tres por ciento de las observaciones. Un horizonte de 45 segundos eleva el error absoluto
+medio por encima de los 18 metros, dado que abarca la maniobra de descenso completa.
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=\textwidth]{uav_pronostico.png}
+\caption{Pronóstico a 15 segundos de la serie de altitud, con intervalo de confianza}
+\label{fig:pron_uav}
+\end{figure}
+
+\subsection{Modelo de vectores autorregresivos (punto 10)}
+
+\subsubsection{Alcance y restricción de calendario}
+
+El modelo multivariado se construye sobre las dos series de tráfico. La serie de altitud queda
+excluida por una razón que no admite solución dentro del conjunto de datos disponible: fue
+registrada en 2018, mientras que las series de tráfico corresponden a 2026. Los calendarios son
+disjuntos y no comparten un solo instante de observación. Un modelo de vectores autorregresivos
+exige series alineadas sobre el mismo eje temporal, de modo que construirlo con las tres es técnicamente imposible.
+
+Las dos series de tráfico tampoco coinciden por completo. La intersección temporal abarca desde
+el 18 de julio hasta el 31 de julio de 2026, esto es, trece días. Tras aplicar la
+transformación logarítmica y la diferencia estacional restan 289 observaciones.
+
+\begin{lstlisting}[caption={Alineación temporal y transformación previa al modelo multivariado}]
+alineadas = pd.concat([alb, pos], axis=1, join="inner").dropna()
+datos_var = np.log1p(alineadas).diff(24).dropna()
+\end{lstlisting}
+
+\subsubsection{Selección del orden de rezagos}
+
+Los cuatro criterios de selección no coinciden, según muestra la Tabla~\ref{tab:var_orden}.
+
+\begin{table}[htbp]
+\centering
+\caption{Orden de rezagos sugerido por cada criterio}
+\label{tab:var_orden}
+\small
+\begin{tabular}{lr}
+\toprule
+\textbf{Criterio} & \textbf{Rezagos} \\
+\midrule
+Akaike & 24 \\
+Bayesiano & 2 \\
+Hannan-Quinn & 2 \\
+Error de predicción final & 24 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+La discrepancia tiene consecuencias considerables. Con dos variables y 24 rezagos, el modelo
+estima 98 parámetros a partir de 241 observaciones de entrenamiento, relación que compromete la
+fiabilidad de las estimaciones. Con dos rezagos, el número desciende a 10.
+
+El desempeño fuera de muestra resuelve el empate. La Tabla~\ref{tab:var_comp} compara
+especificaciones alternativas mediante métricas calculadas sobre la escala original.
+
+\begin{table}[htbp]
+\centering
+\caption{Comparación de especificaciones del modelo multivariado a 48 horas}
+\label{tab:var_comp}
+\small
+\begin{tabular}{rrrrrr}
+\toprule
+\textbf{Rezagos} & \textbf{Parám.} & \textbf{MAE bal.} & \textbf{MAPE bal.} & \textbf{MAE p.\ venta} & \textbf{MAPE p.\ venta} \\
+\midrule
+1 & 6 & 31.287 & 1,48\,\% & 32.128 & 4,67\,\% \\
+\textbf{2} & \textbf{10} & \textbf{27.826} & \textbf{1,31\,\%} & \textbf{31.455} & \textbf{4,59\,\%} \\
+3 & 14 & 26.275 & 1,24\,\% & 30.781 & 4,51\,\% \\
+24 & 98 & 36.008 & 1,71\,\% & 26.932 & 4,03\,\% \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+El resultado es un caso de manual de sobreajuste. La especificación con 24 rezagos, pese
+a emplear casi diez veces más parámetros, predice \textit{peor} la serie del balanceador que la
+de dos rezagos. Su única ventaja aparece en la serie de punto de venta, donde reduce el error absoluto
+medio un catorce por ciento, mejora que no compensa multiplicar por diez el número de parámetros.
+
+Se adopta entonces la especificación con \textbf{dos rezagos}, respaldada por dos
+criterios de información y por el desempeño fuera de muestra. La alternativa de tres rezagos
+mejora levemente ambas métricas, pero ningún criterio de información la respalda.
+
+\subsubsection{Sobre la medición del error}
+
+Las métricas de la Tabla~\ref{tab:var_comp} se calculan sobre la escala original, en
+solicitudes, tras invertir la transformación aplicada. La precisión no es accesoria. Calculadas
+sobre la serie transformada, que oscila en torno a cero, las mismas predicciones arrojaban un
+error porcentual absoluto medio del 97,20 por ciento, cifra que sugería un modelo inservible.
+
+El valor no reflejaba la calidad del modelo sino la inadecuación de la métrica: al dividir por
+un denominador próximo a cero, el error porcentual se vuelve inestable y carece de
+interpretación \parencite{hyndman2006}. Expresado en la escala original, el mismo modelo
+alcanza un error del 1,31 por ciento.
+
+\begin{lstlisting}[caption={Inversión de la transformación previa al cálculo de métricas}]
+for i, t in enumerate(indice_prueba):
+    base = historico.loc[t - pd.Timedelta(hours=24)]
+    historico.loc[t] = base + pronostico_transformado.iloc[i]
+prediccion = np.expm1(historico.reindex(indice_prueba).to_numpy())
+\end{lstlisting}
+
+La Figura~\ref{fig:var_pron} presenta el pronóstico resultante sobre la escala original.
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=\textwidth]{var2_pronostico.png}
+\caption{Pronóstico del modelo multivariado a 48 horas, expresado en la escala original}
+\label{fig:var_pron}
+\end{figure}
+
+\subsection{Impulso-respuesta y causalidad (punto 11)}
+
+La Figura~\ref{fig:irf} presenta las funciones impulso-respuesta ortogonalizadas del modelo
+adoptado. Las respuestas se extinguen con rapidez, comportamiento esperable en una especificación de orden bajo sobre series ya estacionarias.
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=\textwidth]{var2_irf.png}
+\caption{Funciones impulso-respuesta ortogonalizadas del modelo de dos rezagos}
+\label{fig:irf}
+\end{figure}
+
+La Tabla~\ref{tab:granger} presenta los contrastes de causalidad de Granger.
+
+\begin{table}[htbp]
+\centering
+\caption{Contrastes de causalidad de Granger sobre el modelo adoptado}
+\label{tab:granger}
+\small
+\begin{tabular}{llrrl}
+\toprule
+\textbf{Variable causante} & \textbf{Variable causada} & \textbf{$F$} & \textbf{$p$} & \textbf{Decisión al 5\,\%} \\
+\midrule
+Punto de venta & Balanceador & 3,554 & 0,0294 & Se rechaza $H_0$ \\
+Balanceador & Punto de venta & 0,065 & 0,9369 & No se rechaza $H_0$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+El resultado es unidireccional. Los rezagos de la serie de punto de venta contribuyen a
+explicar la serie del balanceador, mientras que la relación inversa no alcanza
+significatividad, con un valor $p$ que se aproxima a la unidad.
+
+La interpretación admite una lectura operativa plausible: el tráfico de la interfaz de punto de venta es una porción del tráfico total que atraviesa el balanceador, de modo que un
+movimiento en el primero antecede a un movimiento en el agregado. Conviene subrayar, no
+obstante, la advertencia formulada en el marco teórico. La causalidad de Granger establece
+precedencia temporal con contenido predictivo, no causalidad estructural. Con trece días de
+solapamiento y 241 observaciones de entrenamiento, la evidencia debe considerarse indicativa.
+
+\subsection{Estacionalidad y representación mediante SARIMA (punto 12)}
+
+Las dos series de tráfico presentan estacionalidad diaria y quedan representadas por modelos
+SARIMA con período $s = 24$. La comparación solicitada refiere a los modelos determinados con
+anterioridad dentro de este mismo trabajo, esto es, a las especificaciones sin componente
+estacional evaluadas en la grilla del punto 5.
+
+Esa comparación, contenida en la Tabla~\ref{tab:sarima}, no deja lugar a dudas. En la serie del
+balanceador, la omisión de la diferencia estacional eleva el error absoluto medio de 16.662 a
+76.284 solicitudes, esto es, lo multiplica por más de cuatro, y el criterio de Akaike se
+deteriora en más de 700 unidades. Incorporar la componente estacional es, pues, lo que decide el ajuste.
+
+La serie de altitud, en cambio, carece de estacionalidad. El periodograma de la serie diferenciada señala un período dominante de 16,3 segundos, pero ese pico no sobrevive al contraste con la función de autocorrelación: en el rezago 16 el coeficiente llega a 0,086, por debajo de la banda de significatividad de $\pm 0{,}092$ que corresponde a una muestra de este tamaño. El pico es espurio. El episodio muestra el riesgo de leer un periodograma por separado, sin verificar sus máximos contra la autocorrelación.
+
+La ausencia responde a la naturaleza del fenómeno: la altitud de una aeronave durante un vuelo
+único obedece al plan de vuelo y a la acción del piloto automático, sin ciclo repetitivo de
+período fijo. La representación adecuada es, pues, un modelo ARIMA sin componente estacional.

@@ -1,0 +1,173 @@
+\section{Marco teórico}
+
+\subsection{Estacionariedad}
+
+Un proceso estocástico $\{y_t\}$ es \textbf{estacionario en sentido débil} cuando cumple tres
+condiciones: su esperanza es constante, $E[y_t] = \mu$ para todo $t$; su varianza es finita y
+constante, $\operatorname{Var}(y_t) = \sigma^2$; y su autocovarianza entre dos instantes
+depende únicamente de la distancia que los separa,
+\begin{equation}
+\gamma_k = \operatorname{Cov}(y_t, y_{t-k}),
+\end{equation}
+sin depender de $t$ \parencite{box2015}.
+
+La exigencia no es formal. Los modelos ARMA estiman un número fijo de parámetros a partir de
+una única realización del proceso, y esa estimación sólo tiene sentido si las propiedades del
+proceso permanecen invariantes a lo largo de la muestra. Cuando la media se desplaza, el
+promedio muestral no estima ningún parámetro poblacional, y las regresiones entre series no
+estacionarias pueden arrojar asociaciones elevadas carentes de significado, fenómeno conocido
+como regresión espuria \parencite{box2015}.
+
+La \textbf{función de autocorrelación} normaliza la autocovarianza,
+\begin{equation}
+\rho_k = \frac{\gamma_k}{\gamma_0},
+\end{equation}
+y la \textbf{función de autocorrelación parcial} mide la correlación entre $y_t$ e $y_{t-k}$
+una vez descontado el efecto de los rezagos intermedios. El comportamiento conjunto de ambas es la herramienta primaria de identificación.
+
+\subsection{Procesos autorregresivos y de medias móviles}
+
+Un proceso \textbf{autorregresivo de orden $p$}, denotado AR$(p)$, expresa el valor corriente
+como combinación lineal de sus propios rezagos más una perturbación:
+\begin{equation}
+y_t = c + \phi_1 y_{t-1} + \phi_2 y_{t-2} + \cdots + \phi_p y_{t-p} + \varepsilon_t,
+\end{equation}
+donde $\varepsilon_t$ es ruido blanco de media nula y varianza $\sigma^2$. Su autocorrelación decae de forma exponencial o sinusoidal, mientras que la parcial se anula a
+partir del rezago $p$.
+
+Un proceso de \textbf{medias móviles de orden $q$}, MA$(q)$, expresa el valor corriente como
+combinación de perturbaciones presentes y pasadas:
+\begin{equation}
+y_t = \mu + \varepsilon_t + \theta_1 \varepsilon_{t-1} + \cdots + \theta_q \varepsilon_{t-q}.
+\end{equation}
+El comportamiento es el inverso: la autocorrelación se anula a partir del rezago $q$ y la parcial decae con lentitud.
+
+El proceso \textbf{ARMA$(p,q)$} combina ambos. Con el operador de rezago $B$, definido por
+$B y_t = y_{t-1}$, se escribe de forma compacta:
+\begin{equation}
+\phi(B)\, y_t = \theta(B)\, \varepsilon_t,
+\end{equation}
+donde $\phi(B) = 1 - \phi_1 B - \cdots - \phi_p B^p$ y
+$\theta(B) = 1 + \theta_1 B + \cdots + \theta_q B^q$.
+
+\subsection{Modelos ARIMA y SARIMA}
+
+Cuando la serie no es estacionaria en niveles pero sí lo es tras diferenciar, el modelo
+incorpora un operador de diferencia $\nabla = 1 - B$. El modelo \textbf{ARIMA$(p,d,q)$} se escribe
+\begin{equation}
+\phi(B)\,(1-B)^d\, y_t = \theta(B)\, \varepsilon_t,
+\end{equation}
+donde $d$ es el número de diferencias regulares necesarias. Corresponde emplearlo cuando la
+serie presenta tendencia o deriva pero carece de ciclo repetitivo.
+
+Cuando además existe un patrón que se repite cada $s$ períodos, el modelo
+\textbf{SARIMA$(p,d,q)\times(P,D,Q)_s$} agrega polinomios estacionales y una diferencia
+estacional $\nabla_s = 1 - B^s$:
+\begin{equation}
+\Phi(B^s)\,\phi(B)\,(1-B)^d\,(1-B^s)^D\, y_t = \Theta(B^s)\,\theta(B)\, \varepsilon_t .
+\end{equation}
+El período $s$ se fija según la periodicidad natural del fenómeno: veinticuatro para datos
+horarios con ciclo diario, siete para datos diarios con ciclo semanal
+\parencite{hyndman2021}.
+
+\subsection{Modelos de vectores autorregresivos}
+
+Cuando varias series se determinan entre sí, el modelo \textbf{VAR$(p)$} trata a
+todas como endógenas y regresa cada una sobre los rezagos de todas \parencite{sims1980}. Para
+un vector $\mathbf{y}_t$ de dimensión $K$:
+\begin{equation}
+\mathbf{y}_t = \mathbf{c} + \mathbf{A}_1 \mathbf{y}_{t-1} + \cdots + \mathbf{A}_p \mathbf{y}_{t-p} + \boldsymbol{\varepsilon}_t,
+\end{equation}
+donde cada $\mathbf{A}_i$ es una matriz $K \times K$. El número total de parámetros asciende a $K(Kp+1)$, y crece con el cuadrado de $K$ y de forma
+lineal en $p$; de ahí que la parsimonia pese más que en el caso univariado \parencite{sims1980}.
+
+El modelo exige que todas las series estén definidas sobre el mismo calendario y sean
+estacionarias. La \textbf{función impulso-respuesta} describe la trayectoria de cada variable
+ante una perturbación unitaria en otra, y permite leer la dinámica del sistema más allá de los
+coeficientes individuales.
+
+La \textbf{causalidad de Granger} contrasta si los rezagos de una variable mejoran la
+predicción de otra, más allá de lo que aportan los rezagos propios de esta última
+\parencite{granger1969}. La hipótesis nula sostiene que los coeficientes asociados a los
+rezagos de la variable candidata son conjuntamente nulos. El rechazo indica precedencia temporal con contenido predictivo, no causalidad en sentido
+estructural.
+
+\subsection{Contrastes de hipótesis empleados}
+
+La Tabla~\ref{tab:contrastes} resume los contrastes aplicados a lo largo del trabajo, con sus
+hipótesis y la regla de decisión correspondiente.
+
+\begin{table}[htbp]
+\centering
+\caption{Contrastes empleados, con sus hipótesis y regla de decisión}
+\label{tab:contrastes}
+\small
+\begin{tabular}{p{3.1cm}p{4.2cm}p{4.2cm}p{3.1cm}}
+\toprule
+\textbf{Contraste} & \textbf{Hipótesis nula} & \textbf{Hipótesis alternativa} & \textbf{Decisión al 5\%} \\
+\midrule
+Dickey-Fuller aumentada & Existe una raíz unitaria; la serie no es estacionaria & La serie es estacionaria & Se rechaza si $p < 0{,}05$ \\
+\addlinespace
+KPSS & La serie es estacionaria en torno a un nivel o tendencia & Existe una raíz unitaria & Se rechaza si $p < 0{,}05$ \\
+\addlinespace
+Ljung-Box & Las autocorrelaciones hasta el rezago $m$ son conjuntamente nulas & Existe autocorrelación & Se rechaza si $p < 0{,}05$ \\
+\addlinespace
+Jarque-Bera & Los residuos siguen una distribución normal & No siguen una distribución normal & Se rechaza si $p < 0{,}05$ \\
+\addlinespace
+Razón de verosimilitud & Los parámetros restringidos son conjuntamente nulos & Al menos uno es no nulo & Se rechaza si $p < 0{,}05$ \\
+\addlinespace
+Causalidad de Granger & Los rezagos de la variable candidata son conjuntamente nulos & Al menos uno es no nulo & Se rechaza si $p < 0{,}05$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Las pruebas de Dickey-Fuller aumentada \parencite{dickey1979} y KPSS
+\parencite{kwiatkowski1992} plantean hipótesis nulas recíprocas. Esa reciprocidad justifica su
+aplicación conjunta: cuando ambas coinciden, la conclusión es sólida; cuando discrepan, la evidencia muestral no basta para pronunciarse con firmeza y la decisión debe apoyarse
+en elementos adicionales.
+
+El estadístico de Ljung-Box \parencite{ljung1978} se define como
+\begin{equation}
+Q = n(n+2) \sum_{k=1}^{m} \frac{\hat{\rho}_k^{\,2}}{n-k},
+\end{equation}
+y se distribuye asintóticamente como una chi-cuadrado. Aplicado a los residuos de un modelo ajustado, es el contraste central del diagnóstico: si los residuos conservan
+autocorrelación, el modelo dejó estructura sin explicar.
+
+El contraste de razón de verosimilitud compara un modelo ajustado contra una versión
+restringida mediante
+\begin{equation}
+LR = 2\,\bigl(\ell_{\text{completo}} - \ell_{\text{restringido}}\bigr),
+\end{equation}
+que se distribuye como una chi-cuadrado con tantos grados de libertad como restricciones
+impuestas. De ahí se obtiene la significatividad conjunta de los parámetros.
+
+\subsection{Criterios de selección y métricas de error}
+
+Los criterios de información penalizan la verosimilitud según el número de parámetros $k$
+sobre $n$ observaciones:
+\begin{align}
+\text{AIC} &= -2\ell + 2k, \\
+\text{BIC} &= -2\ell + k \ln n, \\
+\text{HQIC} &= -2\ell + 2k \ln(\ln n).
+\end{align}
+El criterio de Akaike \parencite{akaike1974} penaliza con menor severidad y tiende a
+seleccionar modelos más amplios; el bayesiano \parencite{schwarz1978} impone una penalización
+creciente con el tamaño muestral y favorece la parsimonia; el de Hannan-Quinn
+\parencite{hannan1979} ocupa una posición intermedia. Si discrepan entre sí, el desempeño fuera de muestra rompe el empate.
+
+Las métricas de error empleadas son el error absoluto medio, la raíz del error cuadrático
+medio y el error porcentual absoluto medio:
+\begin{equation}
+\text{MAE} = \frac{1}{h}\sum |e_t|, \qquad
+\text{RMSE} = \sqrt{\frac{1}{h}\sum e_t^2}, \qquad
+\text{MAPE} = \frac{100}{h}\sum \left|\frac{e_t}{y_t}\right| .
+\end{equation}
+La última merece una advertencia. Al dividir por el valor observado, el error porcentual se
+vuelve inestable cuando el denominador se aproxima a cero, y pierde sentido sobre series que oscilan alrededor del origen \parencite{hyndman2006}. Su empleo exige, por lo tanto, que la
+serie se encuentre expresada en una escala estable y alejada de cero.
+
+\subsection{Herramientas de cómputo}
+
+La estimación se realizó con la biblioteca \textit{statsmodels} del lenguaje Python
+\parencite{seabold2010}, que implementa los modelos SARIMAX y VAR mediante representación en
+espacio de estados y estimación por máxima verosimilitud.
