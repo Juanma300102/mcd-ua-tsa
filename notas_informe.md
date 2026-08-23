@@ -83,3 +83,54 @@ El desempeño fuera de muestra a 48 horas, medido en la escala original, resuelv
 ## Observación pendiente
 
 El mapa de calor de día por hora revela, además del ciclo diario modelado, un **efecto de día de la semana** en la serie ALB: los miércoles y jueves presentan niveles sensiblemente menores. El trabajo no modela estacionalidad semanal con período 168. Corresponde señalarlo entre las limitaciones y no omitirlo, dado que la figura lo exhibe.
+
+---
+
+## Integración del commit remoto `58bceca`
+
+> Alimenta: no se traslada al informe. Registro de la resolución de la divergencia.
+
+El repositorio remoto contenía un commit de Juan Manuel Pedrozo que no estaba en la rama local. Ambas ramas partían de `6072789`: la local agregó la tercera serie, el informe en LaTeX y la reorganización de directorios; la remota reelaboró el notebook de las series de tráfico y redactó un informe propio en Markdown.
+
+### Hallazgo de fondo
+
+Ambos trabajos diagnosticaron de manera independiente los mismos dos problemas del análisis original, y los resolvieron de manera distinta:
+
+| Diagnóstico | Resolución remota | Resolución adoptada |
+|---|---|---|
+| El error porcentual carece de sentido sobre la serie transformada | Eliminarlo de las métricas del VAR y rotular la escala | Invertir la transformación y reportar 1,31 % en escala original |
+| El VAR con 24 rezagos está sobreparametrizado | Conservarlo con una advertencia | Adoptar 2 rezagos, con la comparación fuera de muestra como evidencia |
+
+La coincidencia de ambos diagnósticos, alcanzados por separado, respalda las decisiones metodológicas del informe.
+
+### Resolución archivo por archivo
+
+| Archivo | Decisión | Criterio |
+|---|---|---|
+| `.gitignore` | **Rechazado** el cambio remoto | La regla `*.pdf` excluiría `informe/informe.pdf`, que es el entregable evaluado |
+| `consigna.md` | **Rechazado** el borrado remoto | Es la referencia contra la cual se verifica la cobertura de los catorce puntos |
+| `notes.md` | Tomada la versión remota | Refina las tablas de decisión y documenta la tensión entre criterios de información y desempeño fuera de muestra |
+| `resolucion_consigna_series_bodegaai.ipynb` | Tomada la versión remota, ubicada en `notebooks/` | Conserva el trabajo del coautor bajo la organización local |
+| `informe_resolucion_bodegaai.md` | Incorporado como antecedente | Abarca dos de las tres series y no cumple los puntos 1, 13 ni 14; se conserva porque documenta el trabajo previo |
+
+### Mejoras incorporadas
+
+| Mejora | Efecto |
+|---|---|
+| Funciones de formato numérico castellano | Miles con punto y decimales con coma en las tablas y ejes del notebook consolidado. Se pasó de 0 a 42 valores en convención local, sin ninguno en anglosajona |
+| `formatear_eje_temporal` con `ConciseDateFormatter` | Marcas de fecha distribuidas y etiquetas rotadas, sin superposición |
+| Seis figuras del notebook remoto | Reemplazan a las extraídas de la versión anterior: series en niveles, diferencias, FAS/FAC/FACP de ambas series, diagnóstico de residuos y pronósticos |
+
+### Figuras descartadas del notebook remoto
+
+Las de las celdas 35, 39 y 42 corresponden al modelo VAR de 24 rezagos y **contradirían el informe**, que adopta 2. Las de las celdas 23 y 26 tampoco se incorporaron: el informe convirtió ambas en tablas.
+
+Las tres figuras de elaboración propia (`panel_heatmap`, `panel_perfil_horario` y `var2_pronostico`) se regeneraron con el mismo formato. Adoptar la convención castellana en seis figuras y dejar tres en anglosajona habría producido una inconsistencia visible dentro del mismo documento.
+
+### Verificación posterior
+
+El informe conserva contenido, tablas, cifras y conclusiones. La integración mejoró la presentación, no el análisis. Tras recompilar: 37 páginas, cuerpo de 29 carillas, cero referencias cruzadas pendientes, 17 citas y 17 entradas bibliográficas sin huérfanas, y las seis cifras clave siguen coincidiendo con el notebook consolidado.
+
+### Coordinación pendiente
+
+El informe remoto abarca dos de las tres series. Conviene confirmar con el coautor que el informe final es el elaborado en LaTeX. La integración preserva ambos documentos, de modo que esa conversación no condiciona el resultado técnico.
