@@ -5,6 +5,8 @@ __pycache__/
 
 
 data/*
+
+*.pdf
 # Archivos auxiliares de LaTeX
 *.aux
 *.bbl
