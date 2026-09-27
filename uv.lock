@@ -1670,7 +1670,8 @@ dependencies = [
     { name = "statsforecast" },
     { name = "statsmodels" },
     { name = "torch" },
-    { name = "xgboost-cpu" },
+    { name = "xgboost", marker = "sys_platform == 'darwin'" },
+    { name = "xgboost-cpu", marker = "sys_platform != 'darwin'" },
     { name = "yfinance" },
 ]
 
@@ -1701,7 +1702,8 @@ requires-dist = [
     { name = "statsforecast", specifier = ">=2.0.1" },
     { name = "statsmodels", specifier = ">=0.14.6" },
     { name = "torch", specifier = ">=2.10.0" },
-    { name = "xgboost-cpu", specifier = ">=3.3.0" },
+    { name = "xgboost", marker = "sys_platform == 'darwin'", specifier = ">=3.3.0" },
+    { name = "xgboost-cpu", marker = "sys_platform != 'darwin'", specifier = ">=3.3.0" },
     { name = "yfinance", specifier = ">=1.6.0" },
 ]
 
@@ -3630,8 +3632,8 @@ name = "xgboost-cpu"
 version = "3.3.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "numpy" },
-    { name = "scipy" },
+    { name = "numpy", marker = "sys_platform != 'darwin'" },
+    { name = "scipy", marker = "sys_platform != 'darwin'" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/a7/e2/8acfd6c51c64494284200320def6dec8a92c97c1a306e7033ea6ef16f530/xgboost_cpu-3.3.0.tar.gz", hash = "sha256:9bf15e819f57ab8b83c9c34510b13711f79faf0cef1a92a5fbe5cef9178f72a6", size = 1225043, upload-time = "2026-06-17T21:10:24.981Z" }
 wheels = [
