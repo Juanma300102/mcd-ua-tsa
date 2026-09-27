@@ -1,15 +1,36 @@
 [project]
 name = "mcd-ua-tsa"
 version = "0.1.0"
-requires-python = ">=3.12"
+# neuralprophet 0.9 supports Python <=3.12
+requires-python = ">=3.12,<3.13"
 dependencies = [
+    "autogluon.timeseries>=1.6.3",
+    "autots>=1.0.4",
+    "catboost>=1.2.10",
+    "chronos-forecasting>=2.3.2",
+    "darts>=0.47.0",
+    "holidays>=0.105",
     "ipykernel>=7.3.0",
+    "lightgbm>=4.7.0",
     "matplotlib>=3.11.1",
+    "mlforecast>=0.14.0",
+    "neuralforecast>=3.2.2",
+    "neuralprophet>=0.9.0",
     "notebook>=7.6.2",
-    "numpy>=2.5.2",
-    "pandas>=3.0.5",
+    # pandas<3 and numpy<2: shared constraint of skforecast, statsforecast,
+    # mlforecast, autogluon.timeseries and neuralprophet (see tp-final/status/00-environment.md)
+    "numpy>=1.26,<2",
+    "optuna>=5.0.0",
+    "pandas>=2.3,<3",
+    "prophet>=1.4.0",
     "pymavlink>=2.4.49",
+    "scikit-learn>=1.9.1",
     "seaborn>=0.13.2",
+    "shap>=0.49.1",
+    "skforecast>=0.25.0",
+    "statsforecast>=2.0.1",
     "statsmodels>=0.14.6",
+    "torch>=2.10.0",
+    "xgboost-cpu>=3.3.0",
     "yfinance>=1.6.0",
 ]
