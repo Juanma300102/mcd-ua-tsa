@@ -10,7 +10,7 @@ Sources: `tp-final/consignas.md`, `tp-final/CONTEXT.md`, `tp-1/notes.md`, `tp-1/
 |---|---|---|---|
 | 00 | Environment and tooling | [00-environment.md](00-environment.md) | done |
 | 01 | Data preparation and EDA refresh | [01-data-eda.md](01-data-eda.md) | done |
-| 02 | Evaluation protocol and baselines | [02-evaluation-baselines.md](02-evaluation-baselines.md) | pending |
+| 02 | Evaluation protocol and baselines | [02-evaluation-baselines.md](02-evaluation-baselines.md) | done |
 | 03 | Machine Learning models | [03-ml-models.md](03-ml-models.md) | pending |
 | 04 | Deep Learning models | [04-dl-models.md](04-dl-models.md) | pending |
 | 05 | Prophet family, AutoML, hybrids and foundation models | [05-hybrid-automl-foundation.md](05-hybrid-automl-foundation.md) | pending |
