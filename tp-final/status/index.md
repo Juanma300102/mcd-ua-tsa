@@ -11,7 +11,7 @@ Sources: `tp-final/consignas.md`, `tp-final/CONTEXT.md`, `tp-1/notes.md`, `tp-1/
 | 00 | Environment and tooling | [00-environment.md](00-environment.md) | done |
 | 01 | Data preparation and EDA refresh | [01-data-eda.md](01-data-eda.md) | done |
 | 02 | Evaluation protocol and baselines | [02-evaluation-baselines.md](02-evaluation-baselines.md) | done |
-| 03 | Machine Learning models | [03-ml-models.md](03-ml-models.md) | pending |
+| 03 | Machine Learning models | [03-ml-models.md](03-ml-models.md) | done |
 | 04 | Deep Learning models | [04-dl-models.md](04-dl-models.md) | pending |
 | 05 | Prophet family, AutoML, hybrids and foundation models | [05-hybrid-automl-foundation.md](05-hybrid-automl-foundation.md) | pending |
 | 06 | Comparison, selection and final forecast | [06-selection-forecast.md](06-selection-forecast.md) | pending |
@@ -38,6 +38,8 @@ Status values: `pending`, `in-progress`, `done`, `blocked`.
 - TimeGPT (Nixtla) requires sending the series to an external API with a key; only with explicit approval.
 
 ## Cross-cutting decisions
+
+- Time budget (deadline pressure, added 2026-09-27): every phase from 03 onward must complete its full run (all fits, any hyperparameter search, notebook execution) in a few hours, not days. Any sub-task with an open-ended cost (hyperparameter search trial count, per-step model multiplication, AutoML default budgets in phases 05-06, DL epoch/seed sweeps in phase 04) needs an explicit, stated time-box before it runs; if a time-box is hit, cut scope and record the gap as a reported limitation instead of letting it run unbounded. See `03-ml-models.md`'s "Time budget" section for the first concrete application (Optuna trial caps, `ForecasterDirect`'s per-step model multiplication, `StackingRegressor`'s default internal CV).
 
 - Third series: owned by the teammate, who works in this same repo. It goes into the same notebook and the same LaTeX report. The teammate follows the shared protocol (phase 02) and helpers so results are comparable across the three series.
 
