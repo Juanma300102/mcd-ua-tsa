@@ -18,3 +18,5 @@ data/*
 *.out
 *.run.xml
 *.toc
+
+CONTEXT.md
