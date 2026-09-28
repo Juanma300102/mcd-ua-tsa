@@ -107,7 +107,7 @@ ilustra esta separación para las arquitecturas de Deep Learning, junto con la r
 la mejor época tras la parada anticipada --una corrección aplicada durante el desarrollo del trabajo, que
 se documenta más adelante, al tratar los modelos de Deep Learning--.
 
-\begin{lstlisting}[caption={Ajuste con ventana segura de fuga y restitución de la mejor época (\texttt{tsa\_final/dl\_models.py}).}, label=cod:early_stopping]
+\begin{lstlisting}[caption={Ajuste con ventana libre de fuga de información y restitución de la mejor época (\texttt{tsa\_final/dl\_models.py}).}, label=cod:early_stopping]
 fit_part = train.iloc[:-ES_WINDOW_HOURS]      # 168 h reservadas
 val_part = train.iloc[-(INPUT_CHUNK_LENGTH + ES_WINDOW_HOURS):]
 

@@ -14,7 +14,7 @@ El objetivo consiste en determinar si los modelos de aprendizaje automático (Ma
 aprendizaje profundo (Deep Learning), modelos híbridos, herramientas de AutoML y modelos de fundación
 superan, bajo un protocolo honesto de validación, el desempeño de los modelos clásicos utilizados en el
 trabajo anterior (SARIMA). Se evaluaron 32 configuraciones por serie, agrupadas en diez familias:
-referencias ingenuas, modelos estadísticos clásicos, la refit del SARIMA del Trabajo Práctico N.\textsuperscript{o} 1,
+referencias ingenuas, modelos estadísticos clásicos, la reestimación del SARIMA del Trabajo Práctico N.\textsuperscript{o} 1,
 árboles de decisión con boosting y ensambles, redes neuronales profundas, Prophet y NeuralProphet, un
 híbrido de descomposición estacional con boosting, dos plataformas de AutoML y un modelo de fundación
 de series temporales (Chronos). La selección del modelo final se realizó exclusivamente por el error
@@ -26,7 +26,7 @@ Para la serie ALB, el modelo seleccionado fue un AutoARIMA ajustado automáticam
 de 0,475), apenas por debajo de la referencia estacional ingenua (0,489) y con una mejora relativa
 considerable frente al SARIMA refit del trabajo anterior (0,923). Sin embargo, en el conjunto de prueba
 el propio SARIMA del trabajo anterior resultó el más preciso de las 32 configuraciones evaluadas (MASE de
-1,526, primer puesto), por delante de un Prophet ajustado con ventana seguro de fuga (1,578) y del modelo
+1,526, primer puesto), por delante de un Prophet ajustado con ventana libre de fuga de información (1,578) y del modelo
 seleccionado (2,058, duodécimo puesto), lo que revela una consistencia baja y no significativa entre
 validación y prueba para esta serie (correlación de Spearman $\rho=0,237$, $p=0,192$). Para la serie
 store-service, el modelo seleccionado fue la propia referencia estacional ingenua con período 24 (MASE de
@@ -43,7 +43,7 @@ un modelo de la familia Prophet que la regla de selección honesta no habría el
 Las principales limitaciones del trabajo son la ventana única de validación de 48 horas, previa a una
 intervención de despliegue que debió imputarse; el historial todavía acotado (menos de tres meses); la
 presencia de modelos con puntaje de validación contaminado en el conjunto explorado, documentada pero no
-utilizada para seleccionar; y una posible anomalía en las últimas horas registradas de ambas series, no
+utilizada para seleccionar; y una posible anomalía en las últimas horas registradas de la serie store-service, no
 verificada como error de exportación de datos. Se concluye que, bajo un protocolo de validación estricto,
 la superioridad de los modelos de aprendizaje automático y profundo sobre el enfoque clásico del trabajo
 anterior no es uniforme: depende de la serie, del horizonte evaluado y del criterio de comparación
