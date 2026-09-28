@@ -28,6 +28,16 @@ seleccionado-- no es uniforme: para ALB, una ventana de validación de 48 horas 
 modo que guarda poca relación con su desempeño posterior, mientras que para store-service ese orden es más
 informativo, aunque tampoco infalible, como lo demuestra el caso de NeuralProphet.
 
+\subsection{Serie pública de contraste}
+
+Sobre la serie de visitas horarias a Wikipedia en español, con seis modelos de hiperparámetros por defecto,
+la regla de selección por validación eligió la referencia estacional ingenua, mientras que en prueba el mejor
+modelo fue Ridge y el SARIMA del trabajo anterior el peor (2,513). El resultado es
+coherente con la conclusión general del trabajo: el desempeño relativo del enfoque clásico depende de la
+serie (fue el mejor en ALB y el peor en Wikipedia), y el orden de validación no anticipa el de prueba (Spearman
+de 0,09 sobre seis modelos). Por su alcance reducido, este resultado se interpreta como un contraste y no
+como una evaluación completa.
+
 \subsection{Límites del trabajo}
 
 \begin{enumerate}
@@ -59,6 +69,11 @@ informativo, aunque tampoco infalible, como lo demuestra el caso de NeuralProphe
   Prophet y NeuralProphet y del período estacional del MASE, sobre la base de un historial que, con 86
   días, apenas cubre unas doce semanas completas; un historial más extenso podría justificar su
   incorporación.
+  \item \textbf{Serie pública con alcance acotado.} La serie de Wikipedia se evaluó con seis modelos de
+  hiperparámetros por defecto, sin Deep Learning, AutoML ni modelos de fundación, con una única ventana de
+  validación de 48 horas y una de prueba de 105 horas, y con un SARIMA cuya especificación proviene de ALB.
+  Ridge y LightGBM reciben como variable exógena la marca de intervención del despliegue, que vale 1 entre el 17 y el 22 de septiembre aunque esta serie no fue afectada; con la marca en cero, el MASE de prueba de Ridge pasa de 0,784 a 0,756 y el de LightGBM no cambia, sin alterar el orden de los modelos ni el de validación.
+  Sus resultados no son comparables uno a uno con los de las 32 configuraciones de las series de BodegaAI.
 \end{enumerate}
 
 \subsection{Líneas de trabajo futuro}
@@ -69,9 +84,9 @@ propuesto por \textcite{hyndman2021}, que estime el error de generalización sob
 sucesivas en lugar de una sola. Una segunda línea consiste en extender el historial disponible una vez que
 transcurra más tiempo desde la puesta en producción del sistema, lo que permitiría evaluar con mayor
 solidez tanto la estacionalidad semanal como la estabilidad de las arquitecturas de Deep Learning de mayor
-capacidad. Finalmente, la incorporación de la tercera serie del grupo --pendiente en este informe--
-permitirá contrastar si las conclusiones alcanzadas para las dos series de infraestructura de BodegaAI se
-sostienen en un dominio de datos distinto.
+capacidad. Finalmente, la serie pública de Wikipedia se trató aquí solo como una línea base acotada; extenderle la
+batería completa (Deep Learning, AutoML, modelos de fundación y búsqueda de hiperparámetros) permitiría
+contrastar con mayor solidez si las conclusiones alcanzadas para las dos series de infraestructura de
+BodegaAI se sostienen en un dominio de datos distinto.
 
-\pendiente{Serie 3 (a cargo de otro integrante del grupo). El párrafo de conclusiones específico de esta
-serie se incorporará una vez completado su análisis.}
+

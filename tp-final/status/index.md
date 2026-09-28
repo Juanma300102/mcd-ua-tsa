@@ -16,7 +16,8 @@ Sources: `tp-final/consignas.md`, `tp-final/CONTEXT.md`, `tp-1/notes.md`, `tp-1/
 | 05 | Prophet family, AutoML, hybrids and foundation models | [05-hybrid-automl-foundation.md](05-hybrid-automl-foundation.md) | done |
 | 06 | Comparison, selection and final forecast | [06-selection-forecast.md](06-selection-forecast.md) | done |
 | 07 | Deliverable notebook consolidation | [07-notebook.md](07-notebook.md) | done |
-| 08 | LaTeX report | [08-report.md](08-report.md) | in-progress (third-series placeholders pending) |
+| 08 | LaTeX report | [08-report.md](08-report.md) | done |
+| 09 | Third series: public es.wikipedia baseline | [09-wikipedia-series.md](09-wikipedia-series.md) | done |
 
 Status values: `pending`, `in-progress`, `done`, `blocked`.
 
@@ -41,7 +42,7 @@ Status values: `pending`, `in-progress`, `done`, `blocked`.
 
 - Time budget (deadline pressure, added 2026-09-27): every phase from 03 onward must complete its full run (all fits, any hyperparameter search, notebook execution) in a few hours, not days. Any sub-task with an open-ended cost (hyperparameter search trial count, per-step model multiplication, AutoML default budgets in phases 05-06, DL epoch/seed sweeps in phase 04) needs an explicit, stated time-box before it runs; if a time-box is hit, cut scope and record the gap as a reported limitation instead of letting it run unbounded. See `03-ml-models.md`'s "Time budget" section for the first concrete application (Optuna trial caps, `ForecasterDirect`'s per-step model multiplication, `StackingRegressor`'s default internal CV).
 
-- Third series: owned by the teammate, who works in this same repo. It goes into the same notebook and the same LaTeX report. The teammate follows the shared protocol (phase 02) and helpers so results are comparable across the three series.
+- Third series: public es.wikipedia hourly pageviews (CC0), evaluated as a limited baseline contrast with the shared phase 02 protocol; it lives in `notebooks/07_wikipedia_baseline.ipynb`, in section 3 of `entrega/TP2_Series_Temporales.ipynb`, and in the LaTeX report. It is deliberately not in `sel.SERIES_NAMES` (the 32-model pool and its integrity assertions are unchanged). See `09-wikipedia-series.md`.
 
 - TP1 series 2 was the POS API target group; TP Final uses store-service instead. There is no TP1 number for store-service, so the TP1 model specs are refit on the new data as baselines for both series (phase 02). This makes the "compare against TP1" objective fair for both series.
 - Weekly seasonality (period 168) was a documented TP1 limitation; ~13 weeks of history now allow modeling it.

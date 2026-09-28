@@ -1,6 +1,6 @@
 # Phase 08 — LaTeX report
 
-Status: in-progress (everything is complete except the third-series content, which is explicitly out of scope for this phase and marked with visible "PENDIENTE" placeholders — see Decisions)
+Status: done (the third series is the public es.wikipedia series, added as a limited contrast — see `09-wikipedia-series.md`; the earlier "PENDIENTE" placeholders were removed)
 
 ## Objective
 
@@ -13,9 +13,9 @@ i. Carátula · ii. Resumen Ejecutivo · iii. Índice · iv. Introducción · v.
 ## Tasks
 
 - [x] 08.1 Copy the TP1 skeleton to `tp-final/informe/` and adapt the cover (TP N° 2 title, members, date).
-- [x] 08.2 Introducción: problem, motivation for the series, context (TP1 → full history), description of each series (third series left as a visible placeholder).
+- [x] 08.2 Introducción: problem, motivation for the series, context (TP1 → full history), description of each series (third series: public es.wikipedia contrast, CC0, see `09-wikipedia-series.md`).
 - [x] 08.3 Marco Teórico: one short subsection per model family actually used (naive/classical, ML boosters + stacking, DL (LSTM/N-BEATS/N-HiTS/TCN/TiDE/TFT), Prophet/NeuralProphet + MSTL-LightGBM hybrid, AutoML (AutoGluon/AutoTS) + Chronos) plus metrics and validation scheme. Every model family cites its primary paper.
-- [x] 08.4 Análisis de Resultados: data prep (steady state, intervention imputation, leakage-safe tuning window), protocol (validation/test windows), per-family compact comparison tables for both series, validation-vs-test Spearman consistency, sensitivity table, cost table, comparison with TP1 baseline, final 48h forecast (third series left as a visible placeholder).
+- [x] 08.4 Análisis de Resultados: data prep (steady state, intervention imputation, leakage-safe tuning window), protocol (validation/test windows), per-family compact comparison tables for both series, validation-vs-test Spearman consistency, sensitivity table, cost table, comparison with TP1 baseline, final 48h forecast (third series: dedicated subsection with a six-model baseline table, figures and 48h forecast).
 - [x] 08.5 Conclusiones per series + overall (did complex models beat TP1?), limitations (single validation window, history length, contamination, possible store-service tail anomaly, weekly seasonality), future work.
 - [x] 08.6 Appendices: full 32-model tables per series, 12 supplementary EDA/phase figures, 2 full code listings (intervention imputation, contamination flags).
 - [x] 08.7 Style pass: academic register, no gerunds, no first person (impersonal "se"), APA citations throughout.
@@ -32,7 +32,7 @@ Example structure: `Informe_Series_Temporales_TP2 (1).pdf` (repo root).
 | Cover uses only "Rodrigo Del Rosso" as docente | `tp-final/consignas.md` lists a single docente for TP2, unlike TP1's three | Reusing TP1's three docentes (Del Rosso, Calcagno, Drago) — not evidenced for TP2 |
 | Cover lists only Carlos Aular and Juan Martín Pedrozo as integrantes | Only these two names are evidenced in the repo; the third group member (owner of series 3) is never named in any status doc. Name corrected mid-task from "Juan Manuel Pedrozo" (as it appeared in TP1's cover) to "Juan Martín Pedrozo" per explicit user correction | Inventing a third name, or omitting the "Integrantes" block |
 | Delivery date set to "septiembre de 2026" | No delivery date is recorded anywhere in the repo; instructions explicitly authorize this fallback | Leaving the field blank (breaks the cover layout) |
-| Third series handled as visible amber "PENDIENTE" boxes (`\fcolorbox`) in Introducción, Análisis and Conclusiones | Explicit requirement; content must never be invented | `tcolorbox` (extra package dependency, not needed) |
+| Third series = public es.wikipedia hourly pageviews, reported as a limited contrast (Introducción, Análisis §Serie pública adicional, Conclusiones, Apéndice A, Resumen). The `\pendiente` macro and its boxes were removed | The consigna requires three series; a public series with the same calendar could be evaluated in minutes with reused protocol and code. Numbers come from `results/07_wikipedia*.csv` (table generated from the CSV, not typed by hand) | Waiting for the teammate's series (no data in the repo, no time); keeping amber placeholder boxes in the delivered PDF |
 | "Preparación de datos y protocolo de evaluación" placed as a subsection inside "Análisis de Resultados" | Consigna's mandatory structure has no separate top-level section for it; the example PDF's "Preparación de datos" (its section 3) maps naturally onto "Análisis de Resultados" | A separate 6th top-level section not in the consigna's mandatory list |
 | Section-level `\ref{sec:...}` cross-references removed, replaced by prose ("más adelante, en la sección de...") | `apa7`'s `\section`/`\subsection` do not use numbered LaTeX counters (APA style has no heading numbers), so `\ref` on a section label silently prints an empty string with no warning — verified by inspecting the compiled PDF | Forcing a numbered-heading style into `apa7` (would diverge from the verified TP1 template) |
 | Reported that the TP1 SARIMA refit is actually the single best test-set model for ALB (test MASE 1.526, rank 1/32), and NeuralProphet the best for store-service (test MASE 1.071, rank 1/32) — neither is the selected model | Verified directly against `results/06_all_models.csv`'s `test_rank` column and an independent Spearman recomputation (`scipy.stats.spearmanr` on `val_rank`/`test_rank`), which corrected an imprecise claim from initial research (that N-BEATS was "the best test model of the project on both series" — false: N-BEATS ranks 4th on both) | Repeating the imprecise "N-BEATS wins both series on test" narrative |
@@ -55,4 +55,4 @@ Example structure: `Informe_Series_Temporales_TP2 (1).pdf` (repo root).
 
 ## Known limitation of this phase
 
-The third series (owned by another group member) is not in the repository. Its slots — Introducción (series description), Análisis (results subsection) and Conclusiones (paragraph) — are visible amber "PENDIENTE" boxes. No numbers were invented for it.
+The third series is a limited contrast (six default-hyperparameter models, no DL/AutoML/foundation, SARIMA spec borrowed from ALB, one 48h validation window and one 105h test window, no prediction intervals in its forecast). This is stated in the report (Análisis, Conclusiones, Límites). The cover still lists only Carlos Aular and Juan Martín Pedrozo; whether a third integrante is added is left to the group.

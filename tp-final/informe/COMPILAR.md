@@ -57,7 +57,7 @@ citas sin resolver.
 
 ## Nota sobre la serie 3
 
-El informe contiene recuadros "PENDIENTE" (Introducción, Análisis de Resultados
-y Conclusiones) reservados para la tercera serie, a cargo de otro integrante del
-grupo, que aún no está en el repositorio. No se debe reemplazar su contenido sin
-los resultados reales de esa serie.
+La tercera serie es pública: visitas horarias de usuarios a `es.wikipedia` (API de Wikimedia, CC0). Se evalúa
+como contraste acotado con seis modelos rápidos (`notebooks/07_wikipedia_baseline.ipynb`); las tablas y figuras
+del informe salen de `results/07_wikipedia*.csv` y `informe/figuras/07_wikipedia_*.png`. Los datos se
+regeneran con `experiments/00_download_wikipedia_es.py`.

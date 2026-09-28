@@ -1,7 +1,6 @@
 """Loading, cleaning and calendar-feature helpers for the TP Final series.
 
-All three project series (two implemented here, room for a teammate's third
-one) are AWS ALB/target-group hourly metrics exported as CSV with columns
+The three project series are hourly metrics exported as CSV with columns
 ``load_balancer, target_group, metric_name, period_start_utc, period_end_utc,
 value``. This module centralizes:
 
@@ -27,8 +26,9 @@ import pandas as pd
 DATA_DIR = Path(__file__).resolve().parent.parent / "data"
 
 # name -> {"file": csv filename under DATA_DIR, "metric": metric_name to keep}
-# Add a new entry here to register a third series; load_raw/load_clean work
-# for any registry entry without further changes.
+# Add a new entry here to register a series; load_raw/load_clean work for any
+# registry entry without further changes (optional "intervention": "no" skips the
+# deployment-intervention imputation).
 SERIES_REGISTRY: dict[str, dict[str, str]] = {
     "alb": {
         "file": "alb-request-count-hourly-since-2026-05-01.csv",
@@ -37,6 +37,13 @@ SERIES_REGISTRY: dict[str, dict[str, str]] = {
     "store_service": {
         "file": "store-service-request-count-per-target-hourly-since-2026-05-01.csv",
         "metric": "RequestCountPerTarget",
+    },
+    # Public series (CC0): es.wikipedia user pageviews, same hourly grid. It has no
+    # deployment intervention, so it must not go through ``impute_intervention``.
+    "wikipedia_es": {
+        "file": "wikipedia-es-pageviews-hourly-since-2026-05-01.csv",
+        "metric": "Pageviews",
+        "intervention": "no",
     },
 }
 
@@ -140,7 +147,7 @@ def load_clean(name: str, impute: bool = True) -> pd.Series:
     series = load_raw(name)
     series = series.loc[STEADY_STATE_START:]
 
-    if impute:
+    if impute and SERIES_REGISTRY[name].get("intervention", "yes") == "yes":
         series = impute_intervention(series)
 
     if series.index.freq != pd.tseries.frequencies.to_offset("h"):

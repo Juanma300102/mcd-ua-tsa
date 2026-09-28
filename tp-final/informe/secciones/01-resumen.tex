@@ -7,13 +7,14 @@ de solicitudes atendidas por el balanceador de carga (\emph{RequestCount}, serie
 solicitudes por destino del servicio de tienda (\emph{RequestCountPerTarget}, serie store-service). El
 historial disponible se extiende de un mes, en el trabajo anterior, a aproximadamente tres meses
 (2,063 observaciones horarias por serie, entre el 3 de julio y el 26 de septiembre de 2026, una vez
-descartada la rampa de encendido del balanceador). Una tercera serie, a cargo de otro integrante del
-grupo, se incorpora como espacio reservado en este informe.
+descartada la rampa de encendido del balanceador). Una tercera serie, pública e independiente de
+BodegaAI (visitas horarias de usuarios a Wikipedia en español, con el mismo calendario), se incorpora como
+contraste acotado, con seis modelos de hiperparámetros por defecto.
 
 El objetivo consiste en determinar si los modelos de aprendizaje automático (Machine Learning),
 aprendizaje profundo (Deep Learning), modelos híbridos, herramientas de AutoML y modelos de fundación
 superan, bajo un protocolo honesto de validación, el desempeño de los modelos clásicos utilizados en el
-trabajo anterior (SARIMA). Se evaluaron 32 configuraciones por serie, agrupadas en diez familias:
+trabajo anterior (SARIMA). Se evaluaron 32 configuraciones por cada serie de BodegaAI, agrupadas en diez familias:
 referencias ingenuas, modelos estadísticos clásicos, la reestimación del SARIMA del Trabajo Práctico N.\textsuperscript{o} 1,
 árboles de decisión con boosting y ensambles, redes neuronales profundas, Prophet y NeuralProphet, un
 híbrido de descomposición estacional con boosting, dos plataformas de AutoML y un modelo de fundación
@@ -39,6 +40,12 @@ de 1,443). La consistencia entre validación y prueba resultó, en este caso, mo
 el enfoque clásico del trabajo anterior no fue superado de manera consistente por los modelos más
 recientes: los supera en la serie ALB en el conjunto de prueba, y en store-service es superado solo por
 un modelo de la familia Prophet que la regla de selección honesta no habría elegido.
+
+En la serie pública de contraste (Wikipedia en español), la referencia estacional ingenua fue
+seleccionada por validación (MASE de 0,438), pero en prueba el mejor modelo fue Ridge (MASE de
+0,784) y el SARIMA del trabajo anterior resultó el de peor desempeño (MASE de
+2,513), es decir, el desempeño relativo del SARIMA depende de la serie: fue el mejor en ALB y
+el peor en Wikipedia. Este contraste se obtuvo con una batería reducida y sin ajuste de hiperparámetros.
 
 Las principales limitaciones del trabajo son la ventana única de validación de 48 horas, previa a una
 intervención de despliegue que debió imputarse; el historial todavía acotado (menos de tres meses); la

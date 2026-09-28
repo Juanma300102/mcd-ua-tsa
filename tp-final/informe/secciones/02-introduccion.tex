@@ -76,9 +76,22 @@ store-service a un rango de entre el 80\,\% y el 90\,\%; tras la reversión, sto
 alrededor de un 7\,\% por debajo de su nivel previo, atribuible a un cambio en la cantidad de destinos de
 balanceo activos y no a un artefacto de los datos.
 
-\pendiente{Serie 3 (a cargo de otro integrante del grupo). La descripción de la tercera serie, su origen,
-su problemática de interés analítico y su justificación de elección se incorporarán en esta sección una
-vez que el integrante responsable complete su análisis exploratorio.}
+En tercer lugar, se incorpora una serie pública e independiente de BodegaAI: la cantidad de visitas por
+hora de usuarios a la edición en español de Wikipedia (proyecto \emph{es.wikipedia}, acceso
+\emph{all-access}, agente \emph{user}, es decir, tráfico de usuarios sin \emph{bots} declarados), obtenida
+de la interfaz de métricas de páginas vistas de la Fundación Wikimedia \parencite{datos_wikipedia_tpfinal},
+cuyos conjuntos de datos analíticos se publican bajo la dedicación CC0. Su elección obedece a cuatro motivos:
+mide el mismo tipo de fenómeno que las series anteriores (volumen horario de solicitudes web generado por
+personas); cubre exactamente el mismo calendario (2.063 observaciones horarias entre el 3 de julio y el 26 de
+septiembre de 2026, sin huecos), lo que permite aplicar sin cambios el protocolo de validación y de prueba;
+es de acceso abierto y reproducible; y aporta un contraste de dominio, dado que se trata de tráfico externo,
+no afectado por el despliegue y la reversión que alteraron a las series de BodegaAI. La serie presenta un
+ciclo diario marcado y una autocorrelación semanal alta (0,958 en el rezago de 24 horas y 0,956 en el de 168
+horas sobre el logaritmo de la serie, frente a 0,838 y 0,614 en ALB). Su relación con las series de BodegaAI
+es de contexto y no de dependencia: la correlación de los niveles logarítmicos es de 0,41 con ALB y de 0,49
+con store-service, pero la de los cambios a 24 horas es prácticamente nula ($-0,01$ y $0,01$), por lo que no
+se espera valor predictivo cruzado. Por restricciones de tiempo, esta serie se trata como un contraste
+acotado (Sección~\ref{sec:wikipedia}) y no con la batería completa de 32 configuraciones.
 
 \subsection{Organización del informe}
 

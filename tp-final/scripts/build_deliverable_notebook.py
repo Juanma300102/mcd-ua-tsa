@@ -416,8 +416,9 @@ def build_header_cells() -> list[nbf.NotebookNode]:
             "Este notebook es el acompañamiento en código del informe (`informe/informe.pdf`): "
             "reproduce, en un único archivo autocontenido, el análisis completo de las fases 01 a 06 "
             "del trabajo práctico para las series `alb` (tráfico total del *load balancer*) y "
-            "`store_service` (tráfico por *target* del grupo `store-service`), más un espacio "
-            "reservado para la tercera serie del grupo. Las consignas del curso permiten subir como "
+            "`store_service` (tráfico por *target* del grupo `store-service`), más una tercera serie "
+            "pública (`wikipedia_es`, visitas horarias de usuarios a Wikipedia en español) evaluada "
+            "como contraste con seis modelos rápidos en la Sección 3. Las consignas del curso permiten subir como "
             "máximo dos archivos por integrante (el informe en PDF y un script o notebook), por lo "
             "que este archivo no puede depender del repositorio, del paquete `tsa_final/` ni de las "
             "carpetas `results/`/`data/` tal como existen en el repositorio de trabajo -- todo el "
@@ -495,7 +496,7 @@ def build_header_cells() -> list[nbf.NotebookNode]:
             "RUTA_DATOS = RUTA_DATOS.resolve()\n"
             "RUTA_RESULTADOS = RUTA_RESULTADOS.resolve()\n"
             "RUTA_FIGURAS_INFORME = RUTA_FIGURAS_INFORME.resolve()\n\n"
-            "SERIES_NAMES = [\"alb\", \"store_service\"]  # agregar el nombre de la tercera serie aquí (ver Sección 3)\n"
+            "SERIES_NAMES = [\"alb\", \"store_service\"]  # series de BodegaAI (fases 01 a 06); la serie pública se trata en la Sección 3\n"
             "SERIES_LABELS = {\n"
             "    \"alb\": \"ALB — tráfico total (RequestCount)\",\n"
             "    \"store_service\": \"store-service — tráfico por target (RequestCountPerTarget)\",\n"
@@ -1515,39 +1516,187 @@ def build_phase06_cells() -> list[nbf.NotebookNode]:
 
 
 # ---------------------------------------------------------------------------
-# Section 3 — tercera serie (placeholder)
+# Section 3 — serie pública adicional (Wikipedia en español)
 # ---------------------------------------------------------------------------
 
 
-def build_placeholder_cells() -> list[nbf.NotebookNode]:
+def build_wikipedia_cells() -> list[nbf.NotebookNode]:
     return [
         md(
-            "# 3. Tercera serie\n\n"
-            "**PENDIENTE: Serie 3, a cargo de otro integrante del grupo.**\n\n"
-            "El trabajo práctico exige tres series (`consignas.md`, punto 1); esta sección reserva "
-            "el mismo esqueleto de subsecciones que las Secciones 2.1-2.6 (EDA, protocolo y "
-            "baselines, ML, DL, Prophet/AutoML/híbridos/fundación, comparación y selección) para "
-            "cuando se incorpore. El informe (`informe/secciones/02-introduccion.tex`, "
-            "`04-analisis.tex`, `05-conclusiones.tex`, `06-apendices.tex`) mantiene el mismo "
-            "marcador `\\pendiente{}` en los puntos equivalentes.\n\n"
-            "**Cómo registrar la tercera serie** (una vez que el archivo de datos exista): agregar "
-            "una entrada a `SERIES_REGISTRY`, en la celda de código de `data.py` (Sección 1), con la "
-            "misma forma que las dos entradas existentes --\n\n"
-            "```python\n"
-            'SERIES_REGISTRY["nombre_de_la_tercera_serie"] = {\n'
-            '    "file": "archivo-de-la-tercera-serie.csv",\n'
-            '    "metric": "NombreDeLaColumnaDeValor",\n'
-            "}\n"
-            "```\n\n"
-            "-- y agregar el nombre a `SERIES_NAMES` (celda de configuración de la Sección 2) para "
-            "que las funciones `resumen_eda`, `ejecutar_pipeline_ml`, `ejecutar_pipeline_dl`, "
-            "`ejecutar_pipeline_05` y las de `selection.py` (que ya iteran sobre `SERIES_NAMES`) "
-            "cubran la tercera serie sin ningún otro cambio de código. También hace falta agregar sus "
-            "constantes de fecha propias si la ventana de intervención/steady-state/test difiere de "
-            "las dos series actuales (`STEADY_STATE_START`, `INTERVENTION_START`/`_END`, "
-            "`TEST_START`/`_END` son, hoy, compartidas por `alb` y `store_service` porque provienen "
-            "del mismo *load balancer*; una serie de otro origen probablemente necesite su propio "
-            "conjunto)."
+            "# 3. Serie pública adicional: visitas horarias de Wikipedia en español\n\n"
+            "**¿Qué es y por qué está acá?** La consigna pide tres series (`consignas.md`, punto 1). "
+            "Además de `alb` y `store_service` (infraestructura de BodegaAI) se incorpora una serie "
+            "**pública**: las visitas por hora de usuarios a Wikipedia en español (API de métricas de "
+            "páginas vistas de Wikimedia, proyecto `es.wikipedia`, acceso `all-access`, agente `user`; "
+            "datos bajo licencia CC0). Comparte con las otras dos el mismo calendario (2.063 horas del "
+            "2026-07-03 al 2026-09-26, sin huecos), el ciclo diario y las mismas ventanas de la fase 02 "
+            "(validación de 48 h, test de 105 h), pero es tráfico externo, sin el deploy/rollback del 17 "
+            "al 22 de septiembre y con una autocorrelación semanal (rezago 168) mucho más alta.\n\n"
+            "**Alcance, dicho sin rodeos.** Es un *baseline de contraste*, no una réplica de las "
+            "Secciones 2.1-2.6: seis modelos de cinco familias con **hiperparámetros por defecto**, sin "
+            "Deep Learning, sin AutoML, sin Chronos y sin búsqueda de hiperparámetros. La regla de "
+            "selección es la misma (menor MAE de validación) y los resultados de `alb` y `store_service` "
+            "**no se recalculan**. Por eso esta serie **no** se agrega a `SERIES_NAMES`: las funciones "
+            "de las Secciones 2.x asumen las 32 configuraciones por serie y sus tablas persistidas.\n\n"
+            "**Datos.** `data/wikipedia-es-pageviews-hourly-since-2026-05-01.csv` (mismas columnas que "
+            "los CSV de AWS). Se descarga de "
+            "`https://wikimedia.org/api/rest_v1/metrics/pageviews/aggregate/es.wikipedia/all-access/user/hourly/2026050100/2026092622`; "
+            "el repositorio incluye el script `experiments/00_download_wikipedia_es.py`. El registro "
+            "`wikipedia_es` de `SERIES_REGISTRY` (Sección 1, `data.py`) la marca con "
+            "`\"intervention\": \"no\"`, de modo que `load_clean` no le aplica la imputación del rollback."
+        ),
+        md(
+            "## 3.1 La serie y su estructura frente a las de BodegaAI\n\n"
+            "La primera tabla compara la autocorrelación del logaritmo en los rezagos 24 (ciclo diario) "
+            "y 168 (ciclo semanal). En Wikipedia casi no decae entre 24 y 168 horas; en ALB baja "
+            "claramente. La segunda tabla muestra que la relación con las series de BodegaAI es de "
+            "contexto (mismo ritmo diario) y no de dependencia: los cambios a 24 h prácticamente no "
+            "están correlacionados."
+        ),
+        code(r"""
+NOMBRE_WIKI = "wikipedia_es"
+
+wiki = load_clean(NOMBRE_WIKI)  # sin imputación de intervención (registro: "intervention": "no")
+wiki_train, wiki_val, wiki_test = split(wiki)
+print(f"{NOMBRE_WIKI}: {len(wiki)} horas, {wiki.index[0]} -> {wiki.index[-1]}")
+print(f"train {len(wiki_train)} h | val {len(wiki_val)} h | test {len(wiki_test)} h")
+
+filas = []
+for nombre in [*SERIES_NAMES, NOMBRE_WIKI]:
+    x = np.log(load_clean(nombre).astype(float))
+    filas.append({"serie": nombre, "autocorr_rezago_24": x.autocorr(24), "autocorr_rezago_168": x.autocorr(168)})
+estructura = pd.DataFrame(filas).set_index("serie").round(3)
+print()
+print(estructura.to_string())
+
+relacion = []
+for nombre in SERIES_NAMES:
+    conjunta = pd.concat(
+        [np.log(load_clean(nombre).astype(float)).rename("x"), np.log(wiki.astype(float)).rename("w")], axis=1
+    ).dropna()
+    relacion.append({
+        "contra": nombre,
+        "corr_niveles": conjunta["x"].corr(conjunta["w"]),
+        "corr_cambios_24h": conjunta["x"].diff(24).corr(conjunta["w"].diff(24)),
+    })
+print()
+print(pd.DataFrame(relacion).set_index("contra").round(3).to_string())
+
+fig, ax = plt.subplots(figsize=(13, 3.6))
+reciente = wiki.loc[wiki.index[-1] - pd.Timedelta(days=21):]
+ax.plot(reciente.index, reciente.to_numpy(), color="#1f77b4", lw=1.1)
+ax.axvspan(wiki_test.index[0], wiki_test.index[-1], color="#d62728", alpha=0.12, label="ventana de test")
+ax.set_title("es.wikipedia: visitas horarias de usuarios (últimas 3 semanas)")
+ax.legend()
+fig.tight_layout()
+plt.show()
+"""),
+        md(
+            "## 3.2 Seis modelos rápidos con hiperparámetros por defecto\n\n"
+            "`seasonal_naive_m24` (naive), `holt_winters` (clásico), `SARIMA(1, 1, 1)x(1, 1, 1, 24)` "
+            "(la especificación de ALB del TP1, **no ajustada a esta serie**), `ridge` y `lightgbm` "
+            "(recursivos, con rezagos de hasta 336 h y calendario) y `prophet_default`. Mismo "
+            "protocolo de la fase 02: un ajuste sobre `train` para validar (48 h) y otro sobre "
+            "`train + val + tramo de intervención` para el test (105 h). MASE con m=24. Con "
+            "`REENTRENAR = False` se reutiliza `results/07_wikipedia.csv` si existe; si no existe, o con "
+            "`REENTRENAR = True`, se ajustan los seis modelos (unos 15 segundos en total)."
+        ),
+        code(r"""
+ARCHIVO_RESULTADOS_07 = RUTA_RESULTADOS / "07_wikipedia.csv"
+ARCHIVO_PRONOSTICO_07 = RUTA_RESULTADOS / "07_wikipedia_forecast.csv"
+
+modelos_wiki = [
+    ("seasonal_naive_m24", "naive", NAIVE_MODELS["seasonal_naive_m24"]),
+    ("holt_winters", "classical", CLASSICAL_MODELS["holt_winters"]),
+    ("SARIMA(1, 1, 1)x(1, 1, 1, 24)", "SARIMA (TP1 refit)", make_sarima_fit((1, 1, 1), (1, 1, 1, 24))),
+    ("ridge", "ML", RECURSIVE_MODELS["ridge"]),
+    ("lightgbm", "ML", RECURSIVE_MODELS["lightgbm"]),
+    ("prophet_default", "Prophet", prophet_default_fit),
+]
+
+if REENTRENAR or not ARCHIVO_RESULTADOS_07.exists():
+    tabla_wiki = ResultsTable()
+    for nombre, familia, ajuste in modelos_wiki:
+        evaluate(ajuste, model=nombre, family=familia, series_name=NOMBRE_WIKI, series=wiki, table=tabla_wiki)
+    res_wiki = tabla_wiki.to_frame()
+    res_wiki.to_csv(ARCHIVO_RESULTADOS_07, index=False)
+else:
+    res_wiki = pd.read_csv(ARCHIVO_RESULTADOS_07)
+
+columnas = ["model", "family", "MAE", "MAPE_%", "MASE", "fit_time_s"]
+for ventana, etiqueta in [("val", "Validación (48 h)"), ("test", "Test (105 h)")]:
+    print(f"\n{etiqueta}")
+    print(res_wiki[res_wiki["split"] == ventana].sort_values("MAE")[columnas].round(3).to_string(index=False))
+"""),
+        md(
+            "## 3.3 Selección, desacuerdo validación/test y pronóstico de 48 h\n\n"
+            "Misma regla que en el resto del proyecto: **el modelo seleccionado es el de menor MAE de "
+            "validación**. Se reporta además el mejor y el peor en test. La validación es una sola "
+            "ventana de 48 h y el test una sola de 105 h: si los rankings discrepan, se dice, no se "
+            "elige por test. El pronóstico final reajusta el modelo seleccionado con toda la historia "
+            "disponible y proyecta 48 horas fuera de muestra (sin intervalos de predicción)."
+        ),
+        code(r"""
+rank_val = res_wiki[res_wiki["split"] == "val"].sort_values("MAE").reset_index(drop=True)
+rank_test = res_wiki[res_wiki["split"] == "test"].sort_values("MAE").reset_index(drop=True)
+seleccionado_wiki = rank_val.loc[0, "model"]
+print(f"Seleccionado por validación : {seleccionado_wiki} (MAE val {rank_val.loc[0, 'MAE']:,.0f})")
+print(f"Mejor en test               : {rank_test.loc[0, 'model']} (MAE test {rank_test.loc[0, 'MAE']:,.0f})")
+print(f"Peor en test                : {rank_test.iloc[-1]['model']} (MAE test {rank_test.iloc[-1]['MAE']:,.0f})")
+
+unidos = rank_val[["model", "MAE"]].merge(rank_test[["model", "MAE"]], on="model", suffixes=("_val", "_test"))
+rho_wiki = unidos["MAE_val"].rank().corr(unidos["MAE_test"].rank())
+print(f"Correlación de Spearman entre rankings val y test (6 modelos): {rho_wiki:.2f}")
+
+horizonte_wiki = 48
+if REENTRENAR or not ARCHIVO_PRONOSTICO_07.exists():
+    ajuste_por_nombre = {nombre: ajuste for nombre, _, ajuste in modelos_wiki}
+    indice_futuro = pd.date_range(wiki.index[-1] + pd.Timedelta(hours=1), periods=horizonte_wiki, freq="h", tz="UTC")
+    pron_wiki = pd.DataFrame({
+        "timestamp": indice_futuro,
+        "series": NOMBRE_WIKI,
+        "role": "selected",
+        "model": seleccionado_wiki,
+        "yhat": ajuste_por_nombre[seleccionado_wiki](wiki)(horizonte_wiki),
+    })
+    pron_wiki.to_csv(ARCHIVO_PRONOSTICO_07, index=False)
+else:
+    pron_wiki = pd.read_csv(ARCHIVO_PRONOSTICO_07, parse_dates=["timestamp"])
+print(f"\nPronóstico final: {len(pron_wiki)} h desde {pron_wiki['timestamp'].iloc[0]} hasta {pron_wiki['timestamp'].iloc[-1]}")
+
+# Figuras del informe (solo lectura, como en la Sección 2.3): MAE de test y pronóstico en test de los 3 mejores,
+# y pronóstico final de 48 h.
+from IPython.display import Image, display
+
+for archivo_figura in ["07_wikipedia_test.png", "07_wikipedia_forecast.png"]:
+    ruta_figura = RUTA_FIGURAS_INFORME / archivo_figura
+    if ruta_figura.exists():
+        display(Image(filename=str(ruta_figura)))
+    else:
+        print(f"(figura no encontrada: {ruta_figura})")
+
+assert len(wiki) == 2063
+assert len(res_wiki) == len(modelos_wiki) * 2
+assert len(pron_wiki) == horizonte_wiki and pron_wiki["yhat"].notna().all()
+"""),
+        md(
+            "### Conclusiones de la sección 3\n\n"
+            "Por la regla de selección adoptada, el modelo seleccionado es la referencia estacional "
+            "ingenua (`seasonal_naive_m24`, MAE de validación 21.146,77; MASE 0,438), seguida por "
+            "Prophet (0,655) y LightGBM (0,727). En test, en cambio, el mejor modelo es `ridge` "
+            "(MASE 0,784), la referencia ingenua queda segunda (0,924) y el SARIMA del TP1 es el peor "
+            "(MASE 2,513), precedido por Holt-Winters (2,264). La correlación de Spearman entre ambos "
+            "rankings, sobre solo seis modelos, es 0,09: el desacuerdo validación/test de las series de "
+            "BodegaAI se repite y, con una sola ventana de cada tipo, no permite declarar un ganador "
+            "firme.\n\n"
+            "El contraste principal es que el SARIMA del TP1 fue el mejor modelo de test en ALB (MASE "
+            "1,526) y es el peor en Wikipedia: el desempeño relativo del enfoque clásico depende de la "
+            "serie. Holt-Winters y SARIMA, que solo usan estacionalidad de período 24, ocupan los "
+            "últimos lugares, mientras que `ridge` usa rezagos de hasta 336 h y calendario y Prophet "
+            "incluye por defecto un componente semanal; es una explicación plausible, **no contrastada "
+            "en este trabajo**. Límites: seis modelos sin ajuste de hiperparámetros, SARIMA con la "
+            "especificación de ALB, una sola ventana de validación de 48 h y una de test de 105 h, y "
+            "pronóstico final sin intervalos de predicción. Ridge y LightGBM reciben como variable exógena la marca de intervención del despliegue, que vale 1 entre el 17 y el 22 de septiembre aunque esta serie no fue afectada; con la marca en cero, el MASE de prueba de Ridge pasa de 0,784 a 0,756 y el de LightGBM no cambia, sin alterar el orden de los modelos ni el de validación."
         ),
     ]
 
@@ -1570,7 +1719,10 @@ def build_conclusion_cells() -> list[nbf.NotebookNode]:
             "bajarle el MAE de validación de forma no contaminada; en test, NeuralProphet gana "
             "(MASE 1,071) a pesar de haber sido el 14° de 32 en validación, evidencia de que el "
             "modelo que hubiera elegido la regla honesta no es el mejor en test, pero tampoco había "
-            "forma de saberlo sin ver el futuro.\n\n"
+            "forma de saberlo sin ver el futuro. **wikipedia_es** (serie pública, Sección 3, seis modelos "
+            "sin ajuste de hiperparámetros): la regla de validación elige `seasonal_naive_m24`, pero en "
+            "test gana `ridge` (MASE 0,784) y el SARIMA del TP1 es el peor (2,513): el desempeño "
+            "relativo del enfoque clásico depende de la serie (mejor en ALB, peor en Wikipedia).\n\n"
             "## Consistencia entre validación y test\n\n"
             "La correlación de Spearman entre el ranking de validación y el de test es baja y no "
             "significativa en ALB ($\\rho=0.237$, $p=0.192$, sobre 32 modelos) y moderada y "
@@ -1597,12 +1749,16 @@ def build_conclusion_cells() -> list[nbf.NotebookNode]:
             "artefacto de exportación de datos o de una señal real.\n"
             "5. La estacionalidad semanal (periodo 168), documentada como negligible en la fase 01, "
             "no se explotó como componente principal en ningún modelo -- una limitación conocida de "
-            "TP1 que, con ~13 semanas de historia disponibles, podría revisarse con más datos.\n\n"
+            "TP1 que, con ~13 semanas de historia disponibles, podría revisarse con más datos.\n"
+            "6. La serie pública de Wikipedia (Sección 3) se evaluó como contraste acotado: seis modelos "
+            "por defecto, sin DL, AutoML ni fundación, con el SARIMA de ALB, una ventana de validación de "
+            "48 h y una de test de 105 h; no es comparable uno a uno con las 32 configuraciones de las "
+            "series de BodegaAI.\n\n"
             "## Líneas de trabajo futuro\n\n"
             "Validación cruzada de múltiples orígenes (*origin*) en el sentido de Hyndman & "
             "Athanasopoulos, en vez de un único corte, si el presupuesto de tiempo lo permite; "
-            "extender la historia disponible más allá de los ~86 días actuales; e incorporar "
-            "formalmente la tercera serie del grupo (Sección 3) con el mismo protocolo."
+            "extender la historia disponible más allá de los ~86 días actuales; y extender a la serie "
+            "pública de Wikipedia (Sección 3) la batería completa de las fases 03 a 06."
         ),
     ]
 
@@ -1623,7 +1779,7 @@ def main() -> None:
     cells.extend(build_phase04_cells())
     cells.extend(build_phase05_cells())
     cells.extend(build_phase06_cells())
-    cells.extend(build_placeholder_cells())
+    cells.extend(build_wikipedia_cells())
     cells.extend(build_conclusion_cells())
 
     # Deterministic cell ids (nbformat >= 4.5 requires an `id` per cell); derived from position so

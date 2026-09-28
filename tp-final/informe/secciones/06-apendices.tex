@@ -229,5 +229,31 @@ def eligible_val(pool: pd.DataFrame, series: str) -> pd.DataFrame:
     return pool.loc[mask].sort_values("MAE")
 \end{lstlisting}
 
-\pendiente{Serie 3 (a cargo de otro integrante del grupo). El material gráfico y las tablas completas
-correspondientes a esta serie se incorporarán en este apéndice una vez completado su análisis.}
+\subsection{Serie pública (Wikipedia en español): métricas completas}
+
+La Tabla~\ref{tab:completo_wikipedia} reúne las métricas de los seis modelos evaluados sobre la serie de
+Wikipedia en español (MAE y RMSE en visitas por hora; MAPE en porcentaje; MASE adimensional; tiempo de
+ajuste sumado de ambas ventanas, en segundos), ordenados por MAE de validación.
+
+\begingroup
+\tiny
+\begin{longtable}{llrrrrrrrrr}
+  \caption{Métricas completas de los seis modelos -- serie Wikipedia en español.}
+  \label{tab:completo_wikipedia}\\
+  \toprule
+  Modelo & Familia & MAE val. & RMSE val. & MAPE val. & MASE val. & MAE prueba & RMSE prueba & MAPE prueba & MASE prueba & Ajuste (s) \\
+  \midrule
+  \endfirsthead
+  \toprule
+  Modelo & Familia & MAE val. & RMSE val. & MAPE val. & MASE val. & MAE prueba & RMSE prueba & MAPE prueba & MASE prueba & Ajuste (s) \\
+  \midrule
+  \endhead
+  seasonal\_naive\_m24 & Ingenuo & 21.146,77 & 28.220,67 & 3,52 & 0,438 & 44.587,78 & 80.143,84 & 7,83 & 0,924 & 0,00 \\
+  prophet\_default & Prophet & 31.597,99 & 42.467,81 & 4,75 & 0,655 & 54.035,34 & 65.758,18 & 8,40 & 1,119 & 0,30 \\
+  lightgbm & ML & 35.076,47 & 44.188,30 & 5,57 & 0,727 & 64.580,44 & 73.268,00 & 10,65 & 1,338 & 0,89 \\
+  SARIMA (TP1 refit) & Fundacional TP1 & 49.383,80 & 58.360,80 & 8,72 & 1,023 & 121.296,69 & 128.588,33 & 20,11 & 2,513 & 7,40 \\
+  holt\_winters & Clásico & 55.195,65 & 63.954,68 & 9,53 & 1,143 & 109.296,60 & 114.055,16 & 17,73 & 2,264 & 0,36 \\
+  ridge & ML & 65.234,87 & 73.356,31 & 10,56 & 1,351 & 37.830,60 & 44.596,89 & 6,48 & 0,784 & 0,09 \\
+  \bottomrule
+\end{longtable}
+\endgroup
