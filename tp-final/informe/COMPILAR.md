@@ -50,10 +50,9 @@ rg -c "^! " informe.log        # debe ser 0 (o sin coincidencias)
 rg -i "undefined" informe.log  # no debe haber referencias ni citas sin resolver
 ```
 
-Última compilación verificada: 37 páginas totales, 21 páginas de cuerpo (Resumen
-Ejecutivo + Introducción a Conclusiones, sin contar carátula, índice, lista de
-figuras/tablas, referencias ni apéndices), 0 errores de LaTeX, 0 referencias o
-citas sin resolver.
+Última compilación verificada: 40 páginas totales. Sin contar la carátula ni los apéndices (páginas 2 a 31, con
+resumen, índices, cuerpo, declaración de IA y referencias) son 30 páginas, exactamente el límite de la consigna;
+solo el cuerpo (Introducción a Conclusiones) ocupa 22. 0 errores de LaTeX, 0 referencias o citas sin resolver.
 
 ## Nota sobre la serie 3
 

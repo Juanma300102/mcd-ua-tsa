@@ -484,24 +484,31 @@ ajuste por ventana.
 
 \begin{table}[htbp]
   \centering
-  \caption{Comparación de modelos -- serie Wikipedia en español (MAE en visitas por hora; MASE adimensional).}
-  \label{tab:comparacion_wikipedia}
+  \caption{Comparación de los seis modelos comunes en las tres series (MASE adimensional; en negrita el mejor de cada columna).}
+  \label{tab:comparacion_tres_series}
   \small
-  \begin{tabular}{llrrrr}
+  \begin{tabular}{lrrrrrr}
     \toprule
-    Modelo & Familia & MAE val. & MASE val. & MAE prueba & MASE prueba \\
+    & \multicolumn{2}{c}{ALB} & \multicolumn{2}{c}{store-service} & \multicolumn{2}{c}{Wikipedia} \\
+    \cmidrule(lr){2-3}\cmidrule(lr){4-5}\cmidrule(lr){6-7}
+    Modelo & val. & prueba & val. & prueba & val. & prueba \\
     \midrule
-    \textbf{seasonal\_naive\_m24 (seleccionado)} & Ingenuo & 21.146,77 & 0,438 & 44.587,78 & 0,924 \\
-    prophet\_default & Prophet & 31.597,99 & 0,655 & 54.035,34 & 1,119 \\
-    lightgbm & ML & 35.076,47 & 0,727 & 64.580,44 & 1,338 \\
-    SARIMA (TP1 refit) & Fundacional TP1 & 49.383,80 & 1,023 & 121.296,69 & 2,513 \\
-    holt\_winters & Clásico & 55.195,65 & 1,143 & 109.296,60 & 2,264 \\
-    ridge & ML & 65.234,87 & 1,351 & 37.830,60 & \textbf{0,784} \\
+    seasonal\_naive\_m24 & \textbf{0,489} & 1,990 & \textbf{0,480} & 1,443 & \textbf{0,438} & 0,924 \\
+    prophet\_default & 0,532 & 2,065 & 0,506 & \textbf{1,083} & 0,655 & 1,119 \\
+    lightgbm & 0,609 & 2,261 & 1,423 & 1,501 & 0,727 & 1,338 \\
+    SARIMA (TP1 refit) & 0,923 & \textbf{1,526} & 0,647 & 1,426 & 1,023 & 2,513 \\
+    ridge & 0,913 & 1,704 & 1,201 & 2,189 & 1,351 & \textbf{0,784} \\
+    holt\_winters & 0,798 & 2,094 & 1,439 & 1,665 & 1,143 & 2,264 \\
     \bottomrule
   \end{tabular}
+  \\[2pt]
+  \footnotesize ALB y store-service provienen de la batería completa de 32 configuraciones; Wikipedia, de seis modelos con
+  hiperparámetros por defecto. El SARIMA usa la especificación de ALB en ALB y en Wikipedia, y la del servicio POS API del
+  trabajo anterior en store-service.
 \end{table}
 
-Por la regla de selección adoptada, el modelo seleccionado es la referencia estacional ingenua (MAE de
+La Tabla~\ref{tab:comparacion_tres_series} reúne el MASE de los seis modelos en las tres series; las métricas completas de la serie de
+Wikipedia figuran en el Apéndice~A. Por la regla de selección adoptada, el modelo seleccionado es la referencia estacional ingenua (MAE de
 validación de 21.146,77; MASE de 0,438), seguida por Prophet (0,655) y LightGBM
 (0,727). En el conjunto de prueba, en cambio, el mejor modelo es Ridge (MASE de
 0,784), la referencia ingenua queda segunda (0,924) y el SARIMA del trabajo anterior es
@@ -519,7 +526,9 @@ repite aquí y, con una única ventana de cada tipo, no permite declarar un gana
 
 El contraste con las series de BodegaAI es el hallazgo principal de esta subsección: el SARIMA del trabajo
 anterior fue el modelo de mejor desempeño de prueba en ALB (MASE de 1,526) y es el de peor desempeño en
-Wikipedia. Holt-Winters y SARIMA, los dos modelos que solo utilizan un componente estacional de período 24,
+Wikipedia. Entre los seis modelos comunes a las tres series, la referencia estacional ingenua tiene el menor MASE de validación en
+todas (0,489, 0,480, 0,438 en ALB, store-service y Wikipedia), pero ningún modelo es el mejor en prueba en más de una serie: lo es el SARIMA en ALB, Prophet
+en store-service y Ridge en Wikipedia. Holt-Winters y SARIMA, los dos modelos que solo utilizan un componente estacional de período 24,
 ocupan los últimos lugares, mientras que Ridge incorpora rezagos de hasta 336 horas y variables de
 calendario, y Prophet incluye por defecto un componente semanal. La autocorrelación semanal alta de la serie
 (Figura~\ref{fig:wikipedia_test}) es coherente con esa diferencia, pero este trabajo no la contrasta
@@ -528,13 +537,6 @@ verificado.
 
 El pronóstico final de 48 horas se obtiene con el modelo seleccionado (la referencia estacional ingenua)
 reajustado sobre la totalidad del historial, entre el 26 de septiembre de 2026 a las 23:00 UTC y el 28 de
-septiembre de 2026 a las 22:00 UTC (Figura~\ref{fig:wikipedia_forecast}). Al tratarse de la referencia
+septiembre de 2026 a las 22:00 UTC (Figura~\ref{fig:wikipedia_forecast}, en el Apéndice~A). Al tratarse de la referencia
 ingenua, repite el perfil de las últimas 24 horas observadas y no distingue entre días de la semana; a
 diferencia de las series de BodegaAI, no se calcularon intervalos de predicción para esta serie.
-
-\begin{figure}[htbp]
-  \centering
-  \includegraphics[width=0.92\textwidth]{07_wikipedia_forecast.png}
-  \caption{Serie Wikipedia en español: últimos siete días observados y pronóstico final de 48 horas.}
-  \label{fig:wikipedia_forecast}
-\end{figure}

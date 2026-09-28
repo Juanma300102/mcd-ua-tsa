@@ -16,6 +16,7 @@ Satisfy the consigna's "three series" requirement (point 1) with a public, hourl
 - [x] 09.1 Register the series and download script (CSV under `data/`).
 - [x] 09.2 `notebooks/07_wikipedia_baseline.ipynb`: six default-hyperparameter models (`seasonal_naive_m24`, `holt_winters`, `SARIMA(1,1,1)x(1,1,1,24)`, `ridge`, `lightgbm`, `prophet_default`), phase 02 windows (val 48h, test 105h), same selection rule, 48h forecast. Runs in ~16 s.
 - [x] 09.3 Add the same section (section 3) to the deliverable notebook without re-executing other cells.
+- [x] 09.5 Cross-series comparison: MASE table of the six common models on the three series (report Tabla 8, replacing the Wikipedia-only table; notebook section 3.4, executed alone on top of the existing outputs). The forecast figure moved to Apéndice A and the forced page break before the AI declaration was removed to keep the strict page count at 30.
 - [x] 09.4 Report: Resumen, Introducción, Análisis (new subsection), Conclusiones, Apéndice A, bibliography entry; remove every "PENDIENTE" marker and the `\pendiente` macro; recompile.
 
 ## Decisions
@@ -35,7 +36,8 @@ Satisfy the consigna's "three series" requirement (point 1) with a public, hourl
 - Test MASE: Ridge 0.784 (best), seasonal naive 0.924, Prophet 1.119, LightGBM 1.338, Holt-Winters 2.264, SARIMA 2.513 (worst). Spearman between val and test rankings over the six models: 0.09.
 - Structure vs BodegaAI (log series): autocorrelation at lag 24/168 = 0.838/0.614 (ALB), 0.863/0.809 (store-service), 0.958/0.956 (Wikipedia). Correlation of levels 0.41 (ALB) and 0.49 (store-service); of 24h changes -0.01 and 0.01, so the relation is contextual, not predictive.
 - Report: `xelatex → biber → xelatex → xelatex`, 41 pages, 0 LaTeX errors, 0 undefined references, no "PENDIENTE" text in the PDF.
-- Deliverable notebook: 92 cells (was 85); cells 0-82 outputs and execution counts unchanged; section 3 executed with 3 image outputs; both the "read results" branch and the "compute" branch (fresh results dir) were run and gave identical numbers.
+- Page limit (consigna: 30 carillas, sin carátula ni apéndices): 40 pages total; strict count (pages 2-31) = 30, body only (Introducción-Conclusiones) = 22.
+- Deliverable notebook: 94 cells (was 85); cells 0-82 outputs and execution counts unchanged; section 3 executed with 3 image outputs; both the "read results" branch and the "compute" branch (fresh results dir) were run and gave identical numbers.
 
 ## Known limitations
 

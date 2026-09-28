@@ -35,8 +35,9 @@ la regla de selección por validación eligió la referencia estacional ingenua,
 modelo fue Ridge y el SARIMA del trabajo anterior el peor (2,513). El resultado es
 coherente con la conclusión general del trabajo: el desempeño relativo del enfoque clásico depende de la
 serie (fue el mejor en ALB y el peor en Wikipedia), y el orden de validación no anticipa el de prueba (Spearman
-de 0,09 sobre seis modelos). Por su alcance reducido, este resultado se interpreta como un contraste y no
-como una evaluación completa.
+de 0,09 sobre seis modelos). Entre los seis modelos comunes a las tres series, la referencia estacional ingenua tiene el menor MASE de validación en todas, pero
+ningún modelo es el mejor en prueba en más de una serie (SARIMA en ALB, Prophet en store-service y Ridge en Wikipedia). Por su alcance
+reducido, este resultado se interpreta como un contraste y no como una evaluación completa.
 
 \subsection{Límites del trabajo}
 

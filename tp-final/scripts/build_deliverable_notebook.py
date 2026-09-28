@@ -1680,6 +1680,42 @@ assert len(res_wiki) == len(modelos_wiki) * 2
 assert len(pron_wiki) == horizonte_wiki and pron_wiki["yhat"].notna().all()
 """),
         md(
+            "## 3.4 Comparación de los seis modelos comunes en las tres series\n\n"
+            "La tabla reúne el MASE de validación y de test de los seis modelos que se ejecutaron sobre las "
+            "tres series (para `alb` y `store_service` se toman de `results/06_all_models.csv`, la batería "
+            "completa de 32 configuraciones; para `wikipedia_es`, de los resultados de la sección 3.2). El SARIMA "
+            "usa la especificación de ALB en `alb` y en `wikipedia_es`, y la del servicio POS API del TP1 en "
+            "`store_service`. Es una lectura descriptiva: no se recalcula ninguna serie."
+        ),
+        code(r"""
+pool_06 = pd.read_csv(RUTA_RESULTADOS / "06_all_models.csv")
+MODELOS_COMUNES = ["seasonal_naive_m24", "prophet_default", "lightgbm", "SARIMA (TP1 refit)", "ridge", "holt_winters"]
+
+
+def mase_comun(df, modelo, ventana):
+    if modelo == "SARIMA (TP1 refit)":
+        filas = df[df["family"] == "SARIMA (TP1 refit)"]
+    else:
+        filas = df[df["model"] == modelo]
+    return float(filas[filas["split"] == ventana]["MASE"].iloc[0])
+
+
+comparacion_tres = {}
+for serie, df_serie in [
+    ("alb", pool_06[pool_06["series"] == "alb"]),
+    ("store_service", pool_06[pool_06["series"] == "store_service"]),
+    (NOMBRE_WIKI, res_wiki),
+]:
+    for ventana in ("val", "test"):
+        comparacion_tres[(serie, ventana)] = {m: mase_comun(df_serie, m, ventana) for m in MODELOS_COMUNES}
+
+tabla_tres = pd.DataFrame(comparacion_tres).loc[MODELOS_COMUNES]
+print("MASE (menor es mejor)")
+print(tabla_tres.round(3).to_string())
+print("\nMejor modelo por columna:")
+print(tabla_tres.idxmin().to_string())
+"""),
+        md(
             "### Conclusiones de la sección 3\n\n"
             "Por la regla de selección adoptada, el modelo seleccionado es la referencia estacional "
             "ingenua (`seasonal_naive_m24`, MAE de validación 21.146,77; MASE 0,438), seguida por "
@@ -1694,7 +1730,9 @@ assert len(pron_wiki) == horizonte_wiki and pron_wiki["yhat"].notna().all()
             "serie. Holt-Winters y SARIMA, que solo usan estacionalidad de período 24, ocupan los "
             "últimos lugares, mientras que `ridge` usa rezagos de hasta 336 h y calendario y Prophet "
             "incluye por defecto un componente semanal; es una explicación plausible, **no contrastada "
-            "en este trabajo**. Límites: seis modelos sin ajuste de hiperparámetros, SARIMA con la "
+            "en este trabajo**. Entre los seis modelos comunes a las tres series (sección 3.4), la referencia "
+            "estacional ingenua tiene el menor MASE de validación en todas, pero ningún modelo es el mejor en test en "
+            "más de una serie (SARIMA en ALB, Prophet en store_service y Ridge en Wikipedia). Límites: seis modelos sin ajuste de hiperparámetros, SARIMA con la "
             "especificación de ALB, una sola ventana de validación de 48 h y una de test de 105 h, y "
             "pronóstico final sin intervalos de predicción. Ridge y LightGBM reciben como variable exógena la marca de intervención del despliegue, que vale 1 entre el 17 y el 22 de septiembre aunque esta serie no fue afectada; con la marca en cero, el MASE de prueba de Ridge pasa de 0,784 a 0,756 y el de LightGBM no cambia, sin alterar el orden de los modelos ni el de validación."
         ),
