@@ -15,7 +15,7 @@ Each group member uploads at most 2 files: the PDF report and one script/noteboo
 - [ ] 07.1 Decide layout: shared helpers at the top (loader, protocol, metrics), then one section per series (ALB, store-service, teammate's series).
 - [ ] 07.2 Merge phase notebooks; remove dead cells; keep outputs (figures, tables) rendered.
 - [ ] 07.3 Cache heavy training results (or reduce epochs/trials) so a full run is feasible.
-- [ ] 07.4 Restart-and-run-all check; record total runtime.
+- [ ] 07.4 Restart-and-run-all check; record total runtime. Includes re-executing `04_dl_models.ipynb` (or its consolidated section): its outputs and `04_*.png` figures predate the 2026-09-28 best-weights correction (see `04-dl-models.md`, Evidence → Correction).
 - [ ] 07.5 Export figures used by the report to `tp-final/informe/figuras/`.
 - [ ] 07.6 Integrate the teammate's series section (same repo, same notebook). Agree early on the shared helpers module/cells and section boundaries to avoid notebook merge conflicts (`.ipynb` diffs badly; consider one working notebook per series and consolidating at the end).
 

@@ -129,13 +129,21 @@ def _log_series(values: pd.Series) -> TimeSeries:
 
 
 class _BestEpochTracker(Callback):
-    """Records the epoch with the lowest monitored `val_loss` seen so far."""
+    """Records the epoch with the lowest monitored `val_loss` and a copy of its weights.
+
+    `EarlyStopping` stops `PATIENCE` epochs after the best one and keeps the
+    last weights; `best_state` lets the caller restore the best epoch's weights
+    so the validation forecast comes from the same epoch the test refit trains to.
+    """
 
     def __init__(self) -> None:
         self.best_val_loss = float("inf")
         self.best_epoch = 0
+        self.best_state: dict[str, torch.Tensor] | None = None
 
     def on_validation_end(self, trainer, pl_module) -> None:  # noqa: ANN001 - pytorch_lightning hook signature
+        if trainer.sanity_checking:
+            return
         val_loss = trainer.callback_metrics.get("val_loss")
         if val_loss is None:
             return
@@ -143,6 +151,7 @@ class _BestEpochTracker(Callback):
         if val_loss < self.best_val_loss:
             self.best_val_loss = val_loss
             self.best_epoch = trainer.current_epoch
+            self.best_state = {k: v.detach().clone() for k, v in pl_module.state_dict().items()}
 
 
 # ---------------------------------------------------------------------------
@@ -241,6 +250,8 @@ class DlModelFit:
         fit_cov = _covariate_kwargs(model, fit_part.index)
         val_cov = {f"val_{k}": v for k, v in _covariate_kwargs(model, val_part.index).items()}
         model.fit(series=fit_ts, val_series=val_ts, **fit_cov, **val_cov, verbose=False)
+        if tracker.best_state is not None:
+            model.model.load_state_dict(tracker.best_state)
 
         self.best_epoch = tracker.best_epoch + 1  # epochs are 0-indexed; run that many on the refit
         context = scaler.transform(_log_series(train))
