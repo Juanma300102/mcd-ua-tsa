@@ -1,0 +1,110 @@
+\section{Marco teórico}
+
+Esta sección presenta, de manera sintética, los fundamentos de cada familia de modelos utilizada en el
+trabajo y las métricas empleadas para evaluarlos. Dado el volumen de técnicas comparadas, se prioriza una
+descripción breve del mecanismo de cada modelo y de su cita de origen, remitiendo a la sección de Análisis
+de Resultados para el detalle de los hiperparámetros efectivamente explorados.
+
+\subsection{Modelos ingenuos y estadísticos clásicos}
+
+Las referencias ingenuas (\emph{naive}, \emph{seasonal naive}, \emph{drift} y \emph{average}) constituyen
+el piso mínimo de comparación exigido en cualquier ejercicio de pronóstico \parencite{hyndman2021}. La
+referencia estacional ingenua con período $m=24$, en particular, replica el último valor observado en la
+misma hora del día anterior y resulta especialmente difícil de superar en series con estacionalidad diaria
+fuerte, como las estudiadas en este trabajo.
+
+Los modelos ARIMA y su extensión estacional SARIMA combinan componentes autorregresivos, de promedio móvil
+y de diferenciación para representar series no estacionarias con estructura de dependencia temporal
+\parencite{box2015}. La condición de estacionariedad que estos modelos presuponen se evalúa, en este
+trabajo, mediante los contrastes de Dickey-Fuller aumentado \parencite{dickey1979} y de
+Kwiatkowski-Phillips-Schmidt-Shin \parencite{kwiatkowski1992}, mientras que la adecuación del ajuste sobre
+los residuos se verifica con el estadístico de Ljung-Box \parencite{ljung1978}. El SARIMA ajustado en el
+Trabajo Práctico N.\textsuperscript{o} 1 se reutiliza en este trabajo como modelo fundacional, reajustado
+(\emph{refit}) sobre el historial ampliado, con el fin de aislar el efecto de la extensión de datos del
+efecto de la técnica de modelado. El suavizado exponencial de Holt-Winters y la descomposición estacional
+robusta MSTL --que permite múltiples períodos estacionales simultáneos y admite un modelo autorregresivo
+sobre la tendencia extraída-- completan el conjunto de técnicas clásicas \parencite{hyndman2021}, ambas
+implementadas sobre la librería Statsmodels \parencite{seabold2010}. La selección automática de orden
+mediante AutoARIMA, finalmente, recorre un espacio de modelos ARIMA/SARIMA y selecciona el de menor
+criterio de información, evitando la identificación manual basada en autocorrelación.
+
+\subsection{Machine Learning: árboles con boosting y ensambles}
+
+Los métodos de \emph{gradient boosting} sobre árboles de decisión ajustan de manera secuencial modelos
+débiles que corrigen los errores residuales de la etapa anterior \parencite{friedman2001}. Este trabajo
+compara tres implementaciones de uso extendido en la industria: LightGBM, que introduce muestreo por
+gradiente y agrupamiento exclusivo de variables para acelerar el entrenamiento en conjuntos de datos
+grandes \parencite{ke2017lightgbm}; XGBoost, que formaliza una función objetivo regularizada y una
+estrategia eficiente de búsqueda de particiones \parencite{chen2016xgboost}; y CatBoost, que introduce un
+esquema de \emph{ordered boosting} para reducir el sesgo de las variables categóricas y del propio proceso
+de boosting \parencite{prokhorenkova2018catboost}. Como referencia de ensamble no secuencial se incluye
+Random Forest, que promedia árboles entrenados sobre submuestras aleatorias del conjunto de entrenamiento
+y de las variables \parencite{breiman2001randomforest}, y Ridge, una regresión lineal regularizada
+utilizada como línea de base simple dentro de la familia de Machine Learning. Todos estos modelos se
+alimentan con variables de rezago, estadísticos móviles y variables de calendario, generadas y encadenadas
+recursivamente mediante la librería skforecast \parencite{amatrodrigo2024skforecast}. Como estrategia de
+combinación adicional se evalúa un \emph{stacking} de los tres mejores modelos de esta familia, siguiendo
+el principio de generalización apilada de \textcite{wolpert1992stacking}: un metamodelo aprende a
+combinar las predicciones de los modelos base a partir de una validación interna.
+
+\subsection{Deep Learning}
+
+Las redes neuronales recurrentes de tipo memoria de largo-corto plazo (LSTM) incorporan compuertas que
+regulan el flujo de información a lo largo de la secuencia, mitigando el desvanecimiento del gradiente que
+afecta a las redes recurrentes simples \parencite{hochreiter1997lstm}. N-BEATS propone, en cambio, una
+arquitectura totalmente conectada, sin componentes recurrentes ni convolucionales, organizada en bloques
+residuales que expanden una base interpretable de tendencia y estacionalidad \parencite{oreshkin2020nbeats}.
+N-HiTS extiende esa idea con muestreo jerárquico multitasa y una interpolación multiescala orientada a
+abaratar el costo computacional en horizontes largos \parencite{challu2023nhits}. Las redes convolucionales
+temporales (TCN) aplican convoluciones causales y dilatadas para capturar dependencias de largo alcance sin
+recurrencia \parencite{bai2018tcn}. TiDE combina un codificador denso con conexiones residuales para lograr
+un costo de entrenamiento reducido frente a arquitecturas basadas en atención, con desempeño competitivo
+\parencite{das2023tide}. Finalmente, el Transformer de fusión temporal (TFT) incorpora mecanismos de
+atención multihorizonte y selección de variables interpretable, a costa de un tiempo de entrenamiento
+sensiblemente mayor \parencite{lim2021tft}. Las seis arquitecturas se implementaron mediante la librería
+Darts \parencite{herzen2022darts}.
+
+\subsection{Modelos híbridos y de descomposición}
+
+Prophet formula la serie como una suma de componentes de tendencia, estacionalidad y efectos de
+calendario, ajustados mediante un modelo aditivo generalizado con una interfaz orientada a la producción a
+escala \parencite{taylor2018prophet}. NeuralProphet retoma esa misma descomposición interpretable pero la
+implementa dentro de una red neuronal entrenada por descenso de gradiente, lo que permite incorporar
+autorregresión no lineal sobre los rezagos \parencite{triebe2021neuralprophet}. Como estrategia híbrida
+adicional se evalúa una descomposición MSTL seguida de un modelo LightGBM sobre la serie
+desestacionalizada, que combina la interpretabilidad de la descomposición clásica con la capacidad no
+lineal de un modelo de árboles \parencite{hyndman2021,ke2017lightgbm}.
+
+\subsection{AutoML y modelos de fundación}
+
+AutoGluon TimeSeries automatiza la selección y el ensamblado ponderado de un conjunto amplio de modelos
+candidatos, sin intervención manual sobre los hiperparámetros \parencite{shchur2023autogluon}. AutoTS sigue
+un enfoque análogo, con generaciones evolutivas de combinaciones de modelos sobre una plantilla acotada de
+técnicas rápidas. Ambas plataformas se contrastan además con Chronos, un modelo de fundación de series
+temporales preentrenado sobre un corpus masivo y heterogéneo de series, evaluado en este trabajo en
+modalidad de inferencia directa (\emph{zero-shot}), sin ajuste alguno sobre las series propias
+\parencite{ansari2024chronos}. Los modelos estadísticos clásicos y de AutoARIMA se implementaron mediante
+la librería StatsForecast \parencite{garza2022statsforecast}.
+
+\subsection{Métricas de error y esquema de validación}
+
+El error absoluto medio (MAE) y la raíz del error cuadrático medio (RMSE) expresan el error en las
+unidades originales de la serie, mientras que el error porcentual absoluto medio (MAPE) lo expresa en
+términos relativos. Ninguna de estas tres métricas, sin embargo, permite comparar el desempeño entre series
+de escalas distintas ni distinguir un buen pronóstico de uno que simplemente aprovecha una estacionalidad
+fuerte. El error absoluto escalado medio (MASE) resuelve ambas limitaciones al normalizar el error absoluto
+del modelo por el error absoluto, dentro de la muestra de entrenamiento, de una referencia estacional
+ingenua de período $m$ \parencite{hyndman2006}; un MASE menor a 1 indica que el modelo supera a esa
+referencia. Este trabajo adopta $m=24$ para ambas series, dado que la estacionalidad semanal resultó
+comparativamente débil (sección de Análisis de Resultados), y utiliza el MASE de validación como criterio
+único de selección del modelo final.
+
+El protocolo de validación empleado consiste en una única ventana de contraste de 48 horas, inmediatamente
+anterior al inicio de la intervención de despliegue, y un conjunto de prueba de 105 horas posterior a su
+finalización. Esta elección --una sola ventana en lugar de una validación cruzada expandida de múltiples
+pliegues-- prioriza mantener acotado el tiempo total de cómputo frente a un conjunto de aproximadamente
+quince familias de modelos, a costa de una estimación del error de generalización más ruidosa; esta
+limitación se retoma en las Conclusiones. Para evitar la fuga de información, el ajuste de hiperparámetros
+y la parada anticipada de las redes profundas se realizan sobre una ventana de 168 horas anterior al
+historial de entrenamiento, distinta de la ventana de validación utilizada para clasificar y seleccionar
+los modelos.

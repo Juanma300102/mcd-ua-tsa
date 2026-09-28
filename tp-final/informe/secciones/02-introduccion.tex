@@ -1,0 +1,92 @@
+\section{Introducción}
+
+Una de las tareas centrales del analista de datos consiste en articular los fundamentos teóricos de la
+modelización basada en datos con la implementación práctica de algoritmos capaces de anticipar el
+comportamiento futuro de un fenómeno observado en el tiempo. El presente trabajo retoma dos de las series
+temporales analizadas en el Trabajo Práctico N.\textsuperscript{o} 1 de la materia Análisis de Series
+Temporales de la Maestría en Ciencia de Datos de la Universidad Austral e incorpora, sobre ese mismo
+dominio, un conjunto ampliado de técnicas de Machine Learning, Deep Learning, modelos híbridos, AutoML y
+modelos de fundación, con el propósito de contrastar su desempeño contra el de los modelos clásicos
+empleados previamente.
+
+\subsection{Objetivos}
+
+\textbf{Objetivo general.} Determinar si los modelos contemporáneos de aprendizaje automático y profundo
+mejoran, bajo un protocolo de validación honesto y sin fuga de información, el pronóstico obtenido con
+modelos estadísticos clásicos sobre series horarias de tráfico de infraestructura productiva.
+
+\textbf{Objetivos específicos.}
+\begin{itemize}
+  \item Extender el historial disponible de las series estudiadas en el trabajo anterior e incorporar una
+  intervención de despliegue ocurrida durante el período ampliado.
+  \item Implementar y comparar un conjunto representativo de modelos, organizado en las siguientes
+  familias:
+  \begin{itemize}
+    \item modelos ingenuos y estadísticos clásicos, incluida la refit del SARIMA del trabajo anterior;
+    \item modelos de Machine Learning basados en árboles con boosting y ensambles;
+    \item modelos de Deep Learning (redes recurrentes, convolucionales y basadas en atención);
+    \item modelos híbridos de descomposición estacional, Prophet y NeuralProphet;
+    \item plataformas de AutoML para series temporales;
+    \item un modelo de fundación de series temporales preentrenado (Chronos).
+  \end{itemize}
+  \item Establecer una regla de selección de modelo por serie que no utilice el conjunto de prueba y que
+  documente explícitamente los puntajes de validación contaminados por fuga de información.
+  \item Pronosticar, con el modelo seleccionado en cada serie, una ventana de 48 horas posteriores al
+  final del historial disponible, con sus respectivos intervalos de predicción.
+  \item Contrastar la consistencia entre el desempeño en validación y en prueba, y discutir honestamente
+  los límites de esa consistencia.
+\end{itemize}
+
+\subsection{Contextualización del problema}
+
+Las dos series estudiadas provienen de la infraestructura productiva de BodegaAI y miden, con
+periodicidad horaria, la carga de solicitudes que atraviesa dos capas distintas de un mismo sistema: el
+balanceador de carga de borde (serie ALB, \emph{RequestCount} total) y un servicio interno de tienda,
+medido por destino de balanceo (\emph{RequestCountPerTarget}, serie store-service). Ambas series
+constituyen, en la práctica, la principal señal de capacidad utilizada para decisiones de escalado
+automático y de planificación operativa; un pronóstico de corto plazo confiable permite anticipar
+períodos de alta demanda y detectar desvíos respecto del comportamiento esperado. A diferencia del
+Trabajo Práctico N.\textsuperscript{o} 1, donde el historial disponible cubría un mes y la segunda serie
+correspondía a un servicio distinto (interfaz de punto de venta), el presente trabajo dispone de
+aproximadamente tres meses de historial para ambas series y debe además tratar una intervención real:
+una reversión de despliegue (\emph{rollback}) que redujo transitoriamente el tráfico observado. El
+tratamiento de esa intervención como un evento a imputar, y no como una observación válida del proceso,
+sigue la lógica del análisis de intervención propuesto por \textcite{boxtiao1975}.
+
+\subsection{Descripción de las series seleccionadas}
+
+En primer lugar, la serie ALB registra la cantidad total de solicitudes por hora atendidas por el
+balanceador de carga de producción desde el 1 de mayo de 2026 \parencite{datos_alb_tpfinal}. El
+balanceador entró en operación real hacia el 26 de junio de 2026; antes de esa fecha, y durante una
+rampa de encendido de aproximadamente una semana, el tráfico registrado no representa el régimen estable
+del sistema y se descarta del análisis. A partir del 3 de julio de 2026 la serie alcanza un nivel estable,
+con estacionalidad diaria marcada (fuerza estacional de 0,771 sobre un período de 24 horas, según la
+descomposición MSTL) y una estacionalidad semanal comparativamente débil (fuerza de 0,206 sobre un
+período de 168 horas).
+
+En segundo lugar, la serie store-service registra, con la misma periodicidad horaria y desde la misma
+fecha de origen, la cantidad de solicitudes por destino de balanceo del servicio interno de tienda
+\parencite{datos_storeservice_tpfinal}. Esta serie exhibe una estacionalidad diaria aún más marcada que la
+serie ALB (fuerza estacional de 0,846) y una correlación cruzada prácticamente contemporánea con ella
+($r=0,852$ en rezago cero, sin evidencia de una relación de adelanto-atraso aprovechable como variable
+exógena). Ambas series comparten, además, el mismo evento de intervención: entre el 17 de septiembre de
+2026 a las 18:00 UTC y el 22 de septiembre de 2026 a las 13:00 UTC se produjo una reversión de despliegue
+que redujo el tráfico de ALB a aproximadamente el 72\,\% del nivel de la semana anterior, y el de
+store-service a un rango de entre el 80\,\% y el 90\,\%; tras la reversión, store-service se estabiliza
+alrededor de un 7\,\% por debajo de su nivel previo, atribuible a un cambio en la cantidad de destinos de
+balanceo activos y no a un artefacto de los datos.
+
+\pendiente{Serie 3 (a cargo de otro integrante del grupo). La descripción de la tercera serie, su origen,
+su problemática de interés analítico y su justificación de elección se incorporarán en esta sección una
+vez que el integrante responsable complete su análisis exploratorio.}
+
+\subsection{Organización del informe}
+
+El resto del informe se organiza de la siguiente manera. La sección de Marco Teórico presenta, de forma
+sintética, los fundamentos de cada familia de modelos empleada y las métricas de error utilizadas para
+compararlos. La sección de Análisis de Resultados describe la preparación de los datos, el protocolo de
+validación y evaluación, y los resultados obtenidos por familia de modelos para cada serie, incluida la
+regla de selección del modelo final y el pronóstico de 48 horas resultante. Las Conclusiones sintetizan
+los hallazgos por serie, discuten las limitaciones del trabajo y proponen líneas de continuación. Los
+Apéndices reúnen las tablas completas de las 32 configuraciones evaluadas por serie y los fragmentos de
+código más extensos.

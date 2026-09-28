@@ -16,7 +16,7 @@ Sources: `tp-final/consignas.md`, `tp-final/CONTEXT.md`, `tp-1/notes.md`, `tp-1/
 | 05 | Prophet family, AutoML, hybrids and foundation models | [05-hybrid-automl-foundation.md](05-hybrid-automl-foundation.md) | done |
 | 06 | Comparison, selection and final forecast | [06-selection-forecast.md](06-selection-forecast.md) | done |
 | 07 | Deliverable notebook consolidation | [07-notebook.md](07-notebook.md) | pending |
-| 08 | LaTeX report | [08-report.md](08-report.md) | pending |
+| 08 | LaTeX report | [08-report.md](08-report.md) | in-progress (third-series placeholders pending) |
 
 Status values: `pending`, `in-progress`, `done`, `blocked`.
 

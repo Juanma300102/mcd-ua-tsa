@@ -1,0 +1,295 @@
+% Bibliografía del Trabajo Práctico N.° 2 (Análisis de Series Temporales).
+% Incluye referencias reutilizadas de tp-1/informe/bibliografia.bib (métodos
+% clásicos, métricas, contrastes y datos) y referencias nuevas para los
+% modelos de Machine Learning, Deep Learning, híbridos, AutoML y de
+% fundación empleados en este trabajo.
+
+% --- Modelos clásicos y estadísticos (reutilizadas de TP1) ---
+
+@book{box2015,
+  author    = {Box, George E. P. and Jenkins, Gwilym M. and Reinsel, Gregory C. and Ljung, Greta M.},
+  title     = {Time series analysis: Forecasting and control},
+  edition   = {5th},
+  publisher = {Wiley},
+  year      = {2015}
+}
+
+@article{boxtiao1975,
+  author  = {Box, George E. P. and Tiao, George C.},
+  title   = {Intervention analysis with applications to economic and environmental problems},
+  journal = {Journal of the American Statistical Association},
+  volume  = {70},
+  number  = {349},
+  pages   = {70--79},
+  year    = {1975}
+}
+
+@book{hyndman2021,
+  author    = {Hyndman, Rob J. and Athanasopoulos, George},
+  title     = {Forecasting: Principles and practice},
+  edition   = {3rd},
+  publisher = {OTexts},
+  year      = {2021}
+}
+
+@article{hyndman2006,
+  author  = {Hyndman, Rob J. and Koehler, Anne B.},
+  title   = {Another look at measures of forecast accuracy},
+  journal = {International Journal of Forecasting},
+  volume  = {22},
+  number  = {4},
+  pages   = {679--688},
+  year    = {2006}
+}
+
+@article{dickey1979,
+  author  = {Dickey, David A. and Fuller, Wayne A.},
+  title   = {Distribution of the estimators for autoregressive time series with a unit root},
+  journal = {Journal of the American Statistical Association},
+  volume  = {74},
+  number  = {366},
+  pages   = {427--431},
+  year    = {1979}
+}
+
+@article{kwiatkowski1992,
+  author  = {Kwiatkowski, Denis and Phillips, Peter C. B. and Schmidt, Peter and Shin, Yongcheol},
+  title   = {Testing the null hypothesis of stationarity against the alternative of a unit root},
+  journal = {Journal of Econometrics},
+  volume  = {54},
+  number  = {1-3},
+  pages   = {159--178},
+  year    = {1992}
+}
+
+@article{ljung1978,
+  author  = {Ljung, Greta M. and Box, George E. P.},
+  title   = {On a measure of lack of fit in time series models},
+  journal = {Biometrika},
+  volume  = {65},
+  number  = {2},
+  pages   = {297--303},
+  year    = {1978}
+}
+
+@inproceedings{seabold2010,
+  author    = {Seabold, Skipper and Perktold, Josef},
+  title     = {Statsmodels: Econometric and statistical modeling with {P}ython},
+  booktitle = {Proceedings of the 9th Python in Science Conference},
+  pages     = {92--96},
+  year      = {2010}
+}
+
+% --- Machine Learning (árboles y ensambles) ---
+
+@article{breiman2001randomforest,
+  author  = {Breiman, Leo},
+  title   = {Random forests},
+  journal = {Machine Learning},
+  volume  = {45},
+  number  = {1},
+  pages   = {5--32},
+  year    = {2001}
+}
+
+@article{friedman2001,
+  author  = {Friedman, Jerome H.},
+  title   = {Greedy function approximation: A gradient boosting machine},
+  journal = {The Annals of Statistics},
+  volume  = {29},
+  number  = {5},
+  pages   = {1189--1232},
+  year    = {2001}
+}
+
+@inproceedings{chen2016xgboost,
+  author    = {Chen, Tianqi and Guestrin, Carlos},
+  title     = {{XGB}oost: A scalable tree boosting system},
+  booktitle = {Proceedings of the 22nd ACM SIGKDD International Conference on Knowledge Discovery and Data Mining},
+  pages     = {785--794},
+  year      = {2016}
+}
+
+@inproceedings{ke2017lightgbm,
+  author    = {Ke, Guolin and Meng, Qi and Finley, Thomas and Wang, Taifeng and Chen, Wei and Ma, Weidong and Ye, Qiwei and Liu, Tie-Yan},
+  title     = {{LightGBM}: A highly efficient gradient boosting decision tree},
+  booktitle = {Advances in Neural Information Processing Systems},
+  volume    = {30},
+  pages     = {3146--3154},
+  year      = {2017}
+}
+
+@inproceedings{prokhorenkova2018catboost,
+  author    = {Prokhorenkova, Liudmila and Gusev, Gleb and Vorobev, Aleksandr and Dorogush, Anna Veronika and Gulin, Andrey},
+  title     = {{CatBoost}: Unbiased boosting with categorical features},
+  booktitle = {Advances in Neural Information Processing Systems},
+  volume    = {31},
+  pages     = {6638--6648},
+  year      = {2018}
+}
+
+@article{wolpert1992stacking,
+  author  = {Wolpert, David H.},
+  title   = {Stacked generalization},
+  journal = {Neural Networks},
+  volume  = {5},
+  number  = {2},
+  pages   = {241--259},
+  year    = {1992}
+}
+
+@online{amatrodrigo2024skforecast,
+  author = {Amat Rodrigo, Joaquín and Escobar Ortiz, Javier},
+  title  = {skforecast: Forecasting time series with scikit-learn regressors},
+  year   = {2024},
+  url    = {https://skforecast.org/},
+  urldate = {2026-09-28}
+}
+
+% --- Deep Learning ---
+
+@article{hochreiter1997lstm,
+  author  = {Hochreiter, Sepp and Schmidhuber, Jürgen},
+  title   = {Long short-term memory},
+  journal = {Neural Computation},
+  volume  = {9},
+  number  = {8},
+  pages   = {1735--1780},
+  year    = {1997}
+}
+
+@inproceedings{oreshkin2020nbeats,
+  author    = {Oreshkin, Boris N. and Carpov, Dmitri and Chapados, Nicolas and Bengio, Yoshua},
+  title     = {{N-BEATS}: Neural basis expansion analysis for interpretable time series forecasting},
+  booktitle = {International Conference on Learning Representations (ICLR)},
+  year      = {2020}
+}
+
+@inproceedings{challu2023nhits,
+  author    = {Challu, Cristian and Olivares, Kin G. and Oreshkin, Boris N. and Ramírez, Federico Garza and Canseco, Max Mergenthaler and Dubrawski, Artur},
+  title     = {{NHITS}: Neural hierarchical interpolation for time series forecasting},
+  booktitle = {Proceedings of the AAAI Conference on Artificial Intelligence},
+  volume    = {37},
+  number    = {6},
+  pages     = {6989--6997},
+  year      = {2023}
+}
+
+@online{bai2018tcn,
+  author = {Bai, Shaojie and Kolter, J. Zico and Koltun, Vladlen},
+  title  = {An empirical evaluation of generic convolutional and recurrent networks for sequence modeling},
+  year   = {2018},
+  eprint = {1803.01271},
+  eprinttype = {arxiv},
+  url    = {https://arxiv.org/abs/1803.01271}
+}
+
+@online{das2023tide,
+  author = {Das, Abhimanyu and Kong, Weihao and Leach, Andrew and Mathur, Shaan and Sen, Rajat and Yu, Rose},
+  title  = {Long-term forecasting with {TiDE}: Time-series dense encoder},
+  year   = {2023},
+  eprint = {2304.08424},
+  eprinttype = {arxiv},
+  url    = {https://arxiv.org/abs/2304.08424}
+}
+
+@article{lim2021tft,
+  author  = {Lim, Bryan and Arık, Sercan Ö. and Loeff, Nicolas and Pfister, Tomas},
+  title   = {Temporal fusion transformers for interpretable multi-horizon time series forecasting},
+  journal = {International Journal of Forecasting},
+  volume  = {37},
+  number  = {4},
+  pages   = {1748--1764},
+  year    = {2021}
+}
+
+@online{herzen2022darts,
+  author = {Herzen, Julien and Lässig, Francesco and Piazzetta, Samuele Giuliano and others},
+  title  = {Darts: User-friendly modern machine learning for time series},
+  journal = {Journal of Machine Learning Research},
+  volume = {23},
+  number = {124},
+  pages  = {1--6},
+  year   = {2022},
+  url    = {https://github.com/unit8co/darts},
+  urldate = {2026-09-28}
+}
+
+% --- Modelos híbridos, Prophet y AutoML ---
+
+@article{taylor2018prophet,
+  author  = {Taylor, Sean J. and Letham, Benjamin},
+  title   = {Forecasting at scale},
+  journal = {The American Statistician},
+  volume  = {72},
+  number  = {1},
+  pages   = {37--45},
+  year    = {2018}
+}
+
+@online{triebe2021neuralprophet,
+  author = {Triebe, Oskar and Hewamalage, Hansika and Pilyugina, Polina and Laptev, Nikolay and Bergmeir, Christoph and Rajagopal, Ram},
+  title  = {{NeuralProphet}: Explainable forecasting at scale},
+  year   = {2021},
+  eprint = {2111.15397},
+  eprinttype = {arxiv},
+  url    = {https://arxiv.org/abs/2111.15397}
+}
+
+@online{garza2022statsforecast,
+  author = {Garza, Federico and Mergenthaler Canseco, Max and Challú, Cristian and Olivares, Kin G.},
+  title  = {{StatsForecast}: Lightning fast forecasting with statistical and econometric models},
+  year   = {2022},
+  organization = {Nixtla},
+  url    = {https://github.com/Nixtla/statsforecast},
+  urldate = {2026-09-28}
+}
+
+@inproceedings{shchur2023autogluon,
+  author    = {Shchur, Oleksandr and Turkmen, Ali Caner and Erickson, Nick and Shen, Huibin and Shirkov, Alexander and Hu, Tony and Wang, Yuyang},
+  title     = {{AutoGluon-TimeSeries}: {AutoML} for probabilistic time series forecasting},
+  booktitle = {International Conference on Automated Machine Learning (AutoML)},
+  year      = {2023}
+}
+
+@online{ansari2024chronos,
+  author = {Ansari, Abdul Fatir and Stella, Lorenzo and Turkmen, Caner and Zhang, Xiyuan and Mercado, Pedro and Shen, Huibin and Shchur, Oleksandr and Rangapuram, Syama Sundar and Arango, Sebastian Pineda and Kapoor, Shubham and Zschiegner, Jasper and Maddix, Danielle C. and Wang, Hao and Mahoney, Michael W. and Torkkola, Kari and Wilson, Andrew Gordon and Bohlke-Schneider, Michael and Wang, Yuyang},
+  title  = {Chronos: Learning the language of time series},
+  year   = {2024},
+  eprint = {2403.07815},
+  eprinttype = {arxiv},
+  url    = {https://arxiv.org/abs/2403.07815}
+}
+
+% --- Datos (BodegaAI, series propias del trabajo) ---
+
+@misc{datos_alb_tpfinal,
+  author       = {{BodegaAI}},
+  title        = {Registro horario de solicitudes atendidas por el balanceador de carga de producción (RequestCount), mayo--septiembre de 2026},
+  year         = {2026}
+}
+
+@misc{datos_storeservice_tpfinal,
+  author       = {{BodegaAI}},
+  title        = {Registro horario de solicitudes por destino del servicio de tienda (RequestCountPerTarget), mayo--septiembre de 2026},
+  year         = {2026}
+}
+
+% --- Uso de IA generativa ---
+
+@online{mcadoo2025generativeai,
+  author       = {McAdoo, Timothy and Denneny, Samantha and Lee, Chelsea},
+  title        = {Citing generative {AI} in {APA} Style: Part 1---Reference formats},
+  date         = {2025-09-09},
+  organization = {American Psychological Association},
+  url          = {https://apastyle.apa.org/blog/cite-generative-ai-references},
+  urldate      = {2026-09-28}
+}
+
+@misc{anthropic2026claude_code_sonnet,
+  author = {{Anthropic}},
+  title  = {Claude Code (Sonnet)},
+  year   = {2026},
+  note   = {Agente de codificación con IA generativa},
+  url    = {https://docs.anthropic.com/en/docs/claude-code/getting-started}
+}

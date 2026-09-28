@@ -1,0 +1,474 @@
+\section{Análisis de resultados}
+\label{sec:analisis}
+
+\subsection{Preparación de datos y protocolo de evaluación}
+\label{sec:preparacion}
+
+\subsubsection{Adquisición y preprocesamiento}
+
+Ambas series se registran con periodicidad horaria desde el 1 de mayo de 2026. El balanceador de carga
+entró en operación real hacia el 26 de junio de 2026; los valores previos son nulos o corresponden a una
+rampa de encendido de aproximadamente una semana, en la que el tráfico crece de forma sostenida hasta
+alcanzar un nivel estable (Figura~\ref{fig:raw_ramp}). Este período se descarta y el historial efectivo de
+trabajo queda acotado entre el 3 de julio de 2026, 00:00 UTC, y el 26 de septiembre de 2026, 22:00 UTC:
+2.063 observaciones horarias por serie, sin valores faltantes ni ceros, con frecuencia horaria estrictamente
+monótona.
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.85\textwidth]{01_raw_ramp.png}
+  \caption{Serie ALB sin procesar, con la rampa de encendido del balanceador previa al 3 de julio de 2026.}
+  \label{fig:raw_ramp}
+\end{figure}
+
+Sobre la serie transformada (logaritmo más uno), los contrastes de Dickey-Fuller aumentado
+\parencite{dickey1979} y de Kwiatkowski-Phillips-Schmidt-Shin \parencite{kwiatkowski1992} coinciden en
+rechazar la estacionariedad en niveles para ambas series (ALB: $p_{\text{ADF}}=0,810$,
+$p_{\text{KPSS}}=0,010$; store-service: $p_{\text{ADF}}=0,174$, $p_{\text{KPSS}}=0,010$) y en no rechazarla
+tras una primera diferencia (ALB: $p_{\text{ADF}}\approx0,000$, $p_{\text{KPSS}}=0,100$; store-service:
+$p_{\text{ADF}}\approx0,000$, $p_{\text{KPSS}}=0,100$), lo que justifica el orden de diferenciación de los
+modelos ARIMA/SARIMA empleados.
+
+Entre el 17 de septiembre de 2026, 18:00 UTC, y el 22 de septiembre de 2026, 13:00 UTC (116 horas), una
+reversión de despliegue redujo transitoriamente el tráfico observado (Figura~\ref{fig:intervencion}). Siguiendo
+el tratamiento de eventos exógenos propuesto por \textcite{boxtiao1975}, esta ventana no se descarta ni se
+trata como una observación válida del proceso: se imputa reemplazando cada hora por el valor observado en
+la misma hora de la semana anterior, corregido por un factor de nivel que preserva el crecimiento
+orgánico semana a semana (razón entre el promedio de las 168 horas previas a la intervención y el
+promedio de las 168 horas de la semana anterior a esas). Tras la reversión, la serie store-service se
+estabiliza en un nivel aproximadamente 7\,\% por debajo del previo a la intervención, atribuible a un
+cambio en la cantidad de destinos de balanceo activos; este desplazamiento se trata como parte del proceso
+genuino y no se corrige.
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.85\textwidth]{01_intervention_zoom.png}
+  \caption{Detalle de la intervención de despliegue (17 al 22 de septiembre de 2026) en ambas series.}
+  \label{fig:intervencion}
+\end{figure}
+
+\subsubsection{Variables utilizadas}
+
+Los modelos de Machine Learning se alimentan con rezagos de 1 a 24, 48, 168 y 336 horas, estadísticos
+móviles (media y desvío) en ventanas de 24 y 168 horas, y variables de calendario (hora local, día de la
+semana, fin de semana, feriado argentino, indicador de intervención). La correlación cruzada entre ambas
+series, calculada sobre la serie transformada (logaritmo más uno y primera diferencia), alcanza su máximo
+en el rezago cero ($r=0,852$; Apéndice~A), sin evidencia de una relación de adelanto-atraso aprovechable;
+por esa razón, ninguna serie se utiliza como variable exógena de la otra. La estacionalidad semanal, con
+medias por día de la semana que difieren menos del 3\,\% respecto de la media general en ambas series
+(Figura~\ref{fig:weekly}), se considera despreciable frente a la estacionalidad diaria (fuerza estacional
+de 0,771 para ALB y 0,846 para store-service, según la descomposición MSTL) y se excluye de los modelos
+Prophet, NeuralProphet y del período estacional utilizado por el MASE ($m=24$).
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.8\textwidth]{01_weekly_level.png}
+  \caption{Nivel medio por día de la semana, ambas series, historial efectivo.}
+  \label{fig:weekly}
+\end{figure}
+
+\subsubsection{Esquema de validación y horizonte de prueba}
+
+A diferencia de una validación cruzada expandida de múltiples pliegues, este trabajo adopta una única
+ventana de validación de 48 horas (Figura~\ref{fig:split}), decisión justificada por el tiempo total de
+cómputo que exige comparar 32 configuraciones por serie. La Tabla~\ref{tab:protocolo} resume las ventanas
+del protocolo.
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.92\textwidth]{02_split_train_val_test.png}
+  \caption{Esquema de partición temporal en entrenamiento, validación y prueba.}
+  \label{fig:split}
+\end{figure}
+
+\begin{table}[htbp]
+  \centering
+  \caption{Ventanas del protocolo de evaluación (todos los horarios en UTC).}
+  \label{tab:protocolo}
+  \small
+  \begin{tabular}{lll}
+    \toprule
+    Segmento & Rango & Extensión \\
+    \midrule
+    Historial efectivo & 03/07/2026 00:00 -- 26/09/2026 22:00 & 2.063 h \\
+    Ajuste seguro (tuning / \textit{early stopping}) & 168 h previas a la ventana de validación & 168 h \\
+    Validación (selección del modelo) & 48 h previas al inicio de la intervención & 48 h \\
+    Intervención (imputada) & 17/09/2026 18:00 -- 22/09/2026 13:00 & 116 h \\
+    Prueba & 22/09/2026 14:00 -- 26/09/2026 22:00 & 105 h \\
+    Pronóstico final & 26/09/2026 23:00 -- 28/09/2026 22:00 & 48 h \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+Para evitar la fuga de información señalada en la sección de Marco Teórico, el ajuste de hiperparámetros
+de los modelos de Machine Learning y la parada anticipada de las redes profundas se realizan exclusivamente
+sobre la ventana de 168 horas previa a la ventana de validación, nunca sobre esta última. El Código~\ref{cod:early_stopping}
+ilustra esta separación para las arquitecturas de Deep Learning, junto con la restitución de los pesos de
+la mejor época tras la parada anticipada --una corrección aplicada durante el desarrollo del trabajo, que
+se documenta más adelante, al tratar los modelos de Deep Learning--.
+
+\begin{lstlisting}[caption={Ajuste con ventana segura de fuga y restitución de la mejor época (\texttt{tsa\_final/dl\_models.py}).}, label=cod:early_stopping]
+fit_part = train.iloc[:-ES_WINDOW_HOURS]      # 168 h reservadas
+val_part = train.iloc[-(INPUT_CHUNK_LENGTH + ES_WINDOW_HOURS):]
+
+tracker = _BestEpochTracker()
+model = self._build(
+    n_epochs=MAX_EPOCHS,
+    callbacks=[EarlyStopping(monitor="val_loss", patience=PATIENCE, mode="min"), tracker],
+)
+model.fit(series=fit_ts, val_series=val_ts, verbose=False)
+if tracker.best_state is not None:
+    model.model.load_state_dict(tracker.best_state)  # no se usan los pesos post-paciencia
+\end{lstlisting}
+
+\subsection{Resultados por familia de modelos}
+
+\subsubsection{Referencias ingenuas y modelos estadísticos clásicos}
+
+Las cuatro referencias ingenuas y los cuatro modelos clásicos (Holt-Winters, MSTL con AutoARIMA sobre la
+tendencia, AutoARIMA y el SARIMA refit del Trabajo Práctico N.\textsuperscript{o} 1) constituyen el primer
+nivel de comparación. En validación, la referencia estacional ingenua ($m=24$) ya resulta muy difícil de
+superar: MASE de 0,489 en ALB y de 0,480 en store-service. El AutoARIMA la supera levemente en ALB (0,475)
+y queda apenas por encima en store-service (0,532). El SARIMA refit del trabajo anterior, en cambio,
+obtiene un MASE de validación considerablemente peor en ambas series (0,923 y 0,647, respectivamente): su
+orden fue identificado sobre datos de un mes y una rampa de tráfico distinta, y no se reoptimiza en este
+trabajo. Esa desventaja en validación se revierte por completo en el conjunto de prueba, como se discute
+más adelante, en la sección de selección del modelo.
+
+\subsubsection{Machine Learning: árboles con boosting y ensambles}
+\label{sec:ml}
+
+Con hiperparámetros por defecto, ningún modelo de Machine Learning supera a la referencia estacional
+ingenua en validación: el mejor de ellos en ALB (CatBoost, MASE 0,598) y en store-service (Ridge, MASE
+1,201) quedan por encima de 0,489 y 0,480, respectivamente. Solo tras ajustar hiperparámetros con Optuna
+--sobre la misma ventana de 48 horas luego utilizada para clasificar los modelos-- tres configuraciones de
+ALB (CatBoost, Random Forest y LightGBM ajustados) logran un MASE de validación inferior a la referencia
+ingenua (0,353, 0,416 y 0,421, respectivamente); en store-service, ninguna configuración ajustada alcanza
+ese umbral (mínimo de 0,573 con LightGBM ajustado). Estos cinco modelos se marcan como \emph{contaminados}
+en este trabajo, dado que su puntaje de validación es optimista por construcción: fueron optimizados sobre
+la misma ventana que luego los clasifica. El efecto es visible en el conjunto de prueba: CatBoost ajustado,
+el mejor de ALB en validación, cae al puesto 17 de 32 en prueba (MASE 2,313), y Random Forest ajustado
+resulta, dentro de esta familia, el de peor desempeño relativo en prueba dentro de la serie ALB (MASE 3,455,
+frente a 0,416 en validación). El \emph{stacking} de los tres mejores modelos ajustados, por su parte,
+resulta el peor modelo de toda la familia de Machine Learning en ambas series y en ambos conjuntos (MASE de
+prueba de 4,989 en ALB y 1,981 en store-service), lo que sugiere que combinar modelos ya sobreajustados a
+la ventana de validación no mitiga, sino que propaga, ese sobreajuste. La Figura~\ref{fig:shap} muestra que
+los rezagos de 1, 2, 23, 24 y 48 horas dominan la importancia de las variables según SHAP, muy por delante
+de los rezagos semanales (168 horas), lo que es consistente con la estacionalidad diaria dominante
+documentada en la sección de preparación de datos.
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.85\textwidth]{03_shap_alb.png}
+  \caption{Importancia de variables (SHAP) del mejor modelo de Machine Learning, serie ALB.}
+  \label{fig:shap}
+\end{figure}
+
+\subsubsection{Deep Learning}
+\label{sec:dl}
+
+El desarrollo de las seis arquitecturas de Deep Learning reveló un defecto metodológico corregido antes de
+la selección final: el mecanismo de parada anticipada de la librería Darts conserva los pesos de la última
+época evaluada, no los de la época de menor error de validación, mientras que el ajuste final sobre prueba
+entrena exactamente la cantidad de épocas de la mejor época. La primera corrida comparaba, en consecuencia,
+un modelo sobreentrenado en validación contra un modelo correctamente detenido en prueba. La corrección
+--restituir explícitamente los pesos de la mejor época tras la parada anticipada, documentada en el
+Código~\ref{cod:early_stopping}-- se aplicó a las 24 combinaciones de arquitectura, serie y semilla con
+parada anticipada, y modificó únicamente los puntajes de validación; los de prueba permanecen sin cambios,
+salvo en tres ajustes de TFT en los que el mecanismo de atención, no determinístico en GPU, produjo una
+mejor época distinta entre corridas. La Tabla~\ref{tab:dl_correccion} resume el efecto de la corrección
+sobre el MASE de validación promediado entre las dos semillas utilizadas.
+
+\begin{table}[htbp]
+  \centering
+  \caption{MASE de validación antes y después de la corrección de pesos, por arquitectura de Deep Learning.}
+  \label{tab:dl_correccion}
+  \small
+  \begin{tabular}{lrrrr}
+    \toprule
+    & \multicolumn{2}{c}{ALB} & \multicolumn{2}{c}{store-service} \\
+    Arquitectura & Antes & Corregido & Antes & Corregido \\
+    \midrule
+    LSTM   & 2,337 & 1,909 & 1,017 & 0,728 \\
+    N-BEATS & 1,119 & 0,980 & 1,444 & \textbf{0,638} \\
+    N-HiTS  & 0,875 & \textbf{0,556} & 1,097 & 0,689 \\
+    TCN     & 2,323 & 1,153 & 0,760 & 0,732 \\
+    TFT     & 1,516 & 1,535 & 1,342 & 1,083 \\
+    TiDE    & 0,998 & 0,790 & 1,211 & 0,862 \\
+    \bottomrule
+  \end{tabular}
+  \\[2pt]
+  \footnotesize Se destaca en negrita el mejor MASE corregido de cada serie (N-HiTS en ALB, N-BEATS en
+  store-service).
+\end{table}
+
+Ninguna arquitectura de Deep Learning supera a la referencia estacional ingenua en validación tras la
+corrección, aunque la distancia se reduce sustancialmente respecto de la primera corrida (por ejemplo,
+N-HiTS pasa de 0,875 a 0,556 en ALB). En el conjunto de prueba, N-BEATS resulta el mejor modelo de Deep
+Learning en ambas series (MASE de 1,744 en ALB y 1,247 en store-service), aunque no el mejor modelo del
+proyecto completo (sección de selección del modelo, más adelante). El caso más notorio es el de LSTM en ALB: la mejor época,
+para ambas semillas, es la primera (Tabla~\ref{tab:mejor_epoca}), un resultado reproducido de forma idéntica
+antes y después de la corrección y que se interpreta como un hallazgo genuino --el modelo prácticamente no
+llega a entrenarse antes de que la pérdida de validación comience a degradarse-- y no como un artefacto de
+implementación; en prueba, esta arquitectura resulta el peor modelo de las 32 configuraciones evaluadas
+para ALB (MASE de 7,817, último puesto). El Transformer de fusión temporal (TFT), por su parte, nunca ocupa
+el primer puesto en ninguna serie ni conjunto, pese a exigir el mayor costo de entrenamiento de todo el
+proyecto (sección de costo computacional, más adelante).
+
+\begin{table}[htbp]
+  \centering
+  \caption{Mejor época (de un máximo de 100, paciencia 12) por arquitectura, serie y semilla.}
+  \label{tab:mejor_epoca}
+  \small
+  \begin{tabular}{lrrr}
+    \toprule
+    Arquitectura & Serie & Semilla 42 & Semilla 43 \\
+    \midrule
+    LSTM   & ALB            & 1  & 1  \\
+    N-BEATS & ALB           & 83 & 97 \\
+    N-HiTS  & ALB           & 21 & 42 \\
+    LSTM   & store-service  & 18 & 17 \\
+    N-BEATS & store-service & 34 & 45 \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+\subsubsection{Prophet, modelos híbridos, AutoML y modelo de fundación}
+
+La Figura~\ref{fig:hibridos} presenta el MASE de validación de las ocho configuraciones de esta fase. El
+ensamble de ponderación uniforme (\emph{equal-weight}, contaminado por construcción, ya que sus miembros se
+eligen con el mismo MASE de validación que este puntaje mide) encabeza la clasificación de ALB (0,404) y
+prácticamente iguala a la referencia ingenua en store-service (0,480126 frente a 0,480171). Entre los
+modelos no contaminados, Prophet sin ajuste de hiperparámetros resulta el más competitivo de la fase en
+ambas series (0,532 y 0,506, respectivamente), mientras que AutoGluon TimeSeries se aproxima en ALB
+(0,499). El híbrido de descomposición MSTL seguido de LightGBM sobre la serie desestacionalizada constituye
+el fracaso más marcado de esta fase: en store-service alcanza el peor MASE de validación de las ocho
+configuraciones (1,848) y, en prueba, el peor resultado de las 32 configuraciones evaluadas para esa serie
+(MASE de 3,100, último puesto de 32); en ALB su MASE de prueba (5,721) también es de los más altos del
+proyecto (puesto 30 de 32). Este comportamiento es consistente con una deriva recursiva: al reconstruir la
+componente estacional futura repitiendo los últimos 24 valores observados, cualquier error del componente
+LightGBM sobre la tendencia se acumula sin corrección a lo largo del horizonte de prueba.
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.9\textwidth]{05_val_mae_ranking.png}
+  \caption{MASE de validación, modelos de Prophet, híbridos, AutoML y de fundación.}
+  \label{fig:hibridos}
+\end{figure}
+
+Chronos, evaluado en modalidad de inferencia directa sin ajuste alguno sobre las series propias, obtiene un
+MASE de validación intermedio en ambas series (0,598 en ALB, 0,816 en store-service), un resultado
+razonable para un modelo que nunca observó estas series durante su preentrenamiento. Su intervalo de
+predicción, sin embargo, solo cubre los cuantiles 0,1 y 0,9 sobre los que fue entrenado: el intervalo del
+95\,\% se deja explícitamente sin definir en el pronóstico final, en lugar de aproximarlo con un cuantil
+para el que el modelo no fue entrenado.
+
+\subsubsection{Comparación entre familias}
+
+La Figura~\ref{fig:familias} resume el mejor MASE de validación logrado por cada familia de modelos, en
+ambas series. Las Tablas~\ref{tab:comparacion_alb} y~\ref{tab:comparacion_store} presentan, de forma
+compacta, el mejor modelo de cada familia junto con el modelo seleccionado, el peor modelo elegible, el
+SARIMA refit del trabajo anterior y Chronos; las 32 configuraciones completas de cada serie se listan en el
+Apéndice~A.
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.85\textwidth]{06_best_per_family.png}
+  \caption{Mejor MASE de validación por familia de modelos, ambas series.}
+  \label{fig:familias}
+\end{figure}
+
+\begin{table}[htbp]
+  \centering
+  \caption{Comparación compacta de modelos -- serie ALB (MAE en unidades de la serie; MASE adimensional).}
+  \label{tab:comparacion_alb}
+  \small
+  \begin{tabular}{llrrr}
+    \toprule
+    Modelo & Familia & MAE val. & MASE val. & MASE prueba \\
+    \midrule
+    \textbf{auto\_arima (seleccionado)} & Clásico & 18.807,50 & \textbf{0,475} & 2,058 \\
+    seasonal\_naive\_m24 & Ingenuo & 19.369,02 & 0,489 & 1,990 \\
+    SARIMA (TP1 refit) & Fundacional TP1 & 36.524,57 & 0,923 & \textbf{1,526} \\
+    catboost\_tuned\textsuperscript{a} & ML & 13.994,36 & 0,353 & 2,313 \\
+    catboost\_direct & ML (directo) & 21.126,48 & 0,534 & 2,364 \\
+    nhits & DL & 22.021,71 & 0,556 & 2,441 \\
+    prophet\_default & Prophet & 21.066,96 & 0,532 & 2,065 \\
+    mstl\_lightgbm & Híbrido & 28.341,14 & 0,716 & 5,721 \\
+    autogluon\_timeseries & AutoML & 19.748,53 & 0,499 & 1,974 \\
+    chronos\_bolt\_base & Fundación & 23.678,74 & 0,598 & 2,007 \\
+    ensemble\_equal\_weight\textsuperscript{a} & Ensamble & 16.006,29 & 0,404 & 2,352 \\
+    average & Peor elegible & 149.950,95 & 3,788 & 6,011 \\
+    \bottomrule
+  \end{tabular}
+  \\[2pt]
+  \footnotesize\textsuperscript{a}Puntaje de validación contaminado; no elegible para la selección.
+\end{table}
+
+\begin{table}[htbp]
+  \centering
+  \caption{Comparación compacta de modelos -- serie store-service.}
+  \label{tab:comparacion_store}
+  \small
+  \begin{tabular}{llrrr}
+    \toprule
+    Modelo & Familia & MAE val. & MASE val. & MASE prueba \\
+    \midrule
+    \textbf{seasonal\_naive\_m24 (seleccionado)} & Ingenuo & 2.281,85 & \textbf{0,480} & 1,443 \\
+    auto\_arima & Clásico & 2.525,88 & 0,532 & 1,408 \\
+    SARIMA (TP1 refit) & Fundacional TP1 & 3.075,43 & 0,647 & 1,426 \\
+    lightgbm\_tuned\textsuperscript{a} & ML & 2.723,67 & 0,573 & 1,770 \\
+    ridge\_direct & ML (directo) & 2.905,15 & 0,611 & 1,840 \\
+    nbeats & DL & 3.031,39 & 0,638 & 1,247 \\
+    prophet\_default & Prophet & 2.405,88 & 0,506 & 1,083 \\
+    neuralprophet & Prophet & 3.297,54 & 0,694 & \textbf{1,071} \\
+    mstl\_lightgbm & Híbrido & 8.779,73 & 1,848 & 3,100 \\
+    autots & AutoML & 2.412,97 & 0,508 & 1,596 \\
+    chronos\_bolt\_base & Fundación & 3.877,73 & 0,816 & 1,673 \\
+    ensemble\_equal\_weight\textsuperscript{a} & Ensamble & 2.281,64 & 0,480 & 1,612 \\
+    drift & Peor elegible & 17.022,66 & 3,582 & 2,587 \\
+    \bottomrule
+  \end{tabular}
+  \\[2pt]
+  \footnotesize\textsuperscript{a}Puntaje de validación contaminado; no elegible para la selección. Se
+  incluye NeuralProphet además del mejor Prophet por ser, con amplio margen, el mejor modelo de prueba de
+  toda la serie (ver la sección siguiente, de selección del modelo).
+\end{table}
+
+\subsection{Selección del modelo y consistencia entre validación y prueba}
+\label{sec:seleccion}
+
+La regla de selección adoptada (Código~\ref{cod:seleccion}) recorre el conjunto de 32 modelos por serie,
+descarta los marcados como contaminados y selecciona el de menor MAE de validación entre los restantes.
+Se marcan como contaminados los cinco modelos ajustados con Optuna sobre la ventana de validación en cada
+serie (\texttt{catboost\_tuned}, \texttt{random\_forest\_tuned} y \texttt{lightgbm\_tuned} en ALB;
+\texttt{ridge\_tuned}, \texttt{lightgbm\_tuned} y \texttt{xgboost\_tuned} en store-service), el
+\emph{stacking} construido a partir de esos modelos ajustados, y el ensamble de ponderación uniforme, cuyos
+miembros se eligen con el propio MAE de validación. Prophet ajustado (\texttt{prophet\_tuned}) se excluye de
+esta lista porque su ajuste se realiza sobre la ventana segura de 168 horas descrita en la sección de
+preparación de datos, nunca sobre la ventana de validación.
+
+\begin{lstlisting}[caption={Regla de selección: menor MAE de validación entre los modelos elegibles (\texttt{tsa\_final/selection.py}).}, label=cod:seleccion]
+def select_model(pool: pd.DataFrame, series: str) -> SelectionResult:
+    """El modelo seleccionado es el de menor MAE de validacion entre los
+    elegibles (la regla adoptada). El conjunto de prueba nunca se usa para
+    seleccionar."""
+    elig = eligible_val(pool, series)
+    return SelectionResult(series=series, selected=elig.iloc[0],
+                            runner_up=elig.iloc[1], worst=elig.iloc[-1])
+\end{lstlisting}
+
+Bajo esta regla, el modelo seleccionado para ALB es \texttt{auto\_arima} y para store-service es la propia
+referencia estacional ingenua. La comparación contra el SARIMA refit del trabajo anterior arroja una mejora
+del 48,5\,\% en validación para ALB (MASE de 0,475 frente a 0,923) y del 25,8\,\% en validación para
+store-service (0,480 frente a 0,647); en ambos casos, esa ventaja se revierte en el conjunto de prueba: el
+modelo seleccionado resulta un 34,9\,\% peor que el SARIMA refit en ALB y un 1,2\,\% peor en store-service.
+Comparado contra la referencia estacional ingenua, el modelo seleccionado de ALB mejora un 2,9\,\% en
+validación pero empeora un 3,4\,\% en prueba.
+
+La Figura~\ref{fig:consistencia} y el coeficiente de correlación de Spearman entre el orden de validación y
+el orden de prueba cuantifican esta divergencia: para ALB, considerando las 32 configuraciones, $\rho=0,237$
+($p=0,192$), no significativo al 5\,\%; restringido a los 27 modelos elegibles, $\rho=0,346$ ($p=0,077$),
+tampoco significativo. Para store-service, en cambio, la consistencia es moderada y estadísticamente
+significativa: $\rho=0,654$ ($p<0,001$) sobre las 32 configuraciones, y $\rho=0,692$ ($p<0,001$) sobre las
+27 elegibles. Esta significancia agregada, sin embargo, no impide divergencias puntuales severas: NeuralProphet,
+decimocuarto en validación de store-service, resulta el mejor modelo de prueba de toda la serie.
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.85\textwidth]{06_val_vs_test_scatter.png}
+  \caption{Dispersión entre el orden de validación y el orden de prueba, ambas series.}
+  \label{fig:consistencia}
+\end{figure}
+
+La Tabla~\ref{tab:sensibilidad} contrasta la regla adoptada con dos criterios alternativos, a título
+exclusivamente informativo: el que se obtendría si se permitieran modelos contaminados, y el que
+seleccionaría un oráculo que conociera de antemano el MAE de prueba --un criterio inaplicable en la
+práctica, dado que el pronóstico se produce antes de observar el conjunto de prueba--. Cada criterio elige
+un ganador distinto en ambas series, lo que evidencia que la elección del criterio de selección no es un
+detalle menor del protocolo.
+
+\begin{table}[htbp]
+  \centering
+  \caption{Análisis de sensibilidad del criterio de selección (no constituye una regla de selección alternativa).}
+  \label{tab:sensibilidad}
+  \small
+  \begin{tabular}{lll}
+    \toprule
+    Criterio & Serie ALB & Serie store-service \\
+    \midrule
+    Regla adoptada (MAE val., elegibles) & auto\_arima & seasonal\_naive\_m24 \\
+    Incluyendo modelos contaminados & catboost\_tuned & ensemble\_equal\_weight \\
+    Oráculo de MAE de prueba\textsuperscript{a} & SARIMA (TP1 refit) & neuralprophet \\
+    \bottomrule
+  \end{tabular}
+  \\[2pt]
+  \footnotesize\textsuperscript{a}No utilizable al momento de pronosticar; se incluye solo como referencia
+  de contexto.
+\end{table}
+
+\subsection{Costo computacional}
+\label{sec:costo}
+
+El costo de ajuste no fue el criterio de selección, pero resulta relevante para evaluar la viabilidad
+operativa de cada familia. La Tabla~\ref{tab:costo} contrasta los modelos de mayor costo con el modelo
+seleccionado. El Transformer de fusión temporal (TFT) exige, por lejos, el mayor tiempo de ajuste del
+proyecto (entre 175 y 292 segundos por serie y conjunto, sumado sobre las dos semillas utilizadas), sin
+alcanzar el primer puesto en ninguna comparación; AutoGluon TimeSeries exhibe un costo fijo similar,
+producto de su límite de tiempo configurado (300 segundos por llamada), independientemente del tamaño de
+la serie.
+
+\begin{table}[htbp]
+  \centering
+  \caption{Tiempo de ajuste de los modelos de mayor costo computacional (segundos).}
+  \label{tab:costo}
+  \footnotesize
+  \begin{tabular}{lp{3.6cm}rr}
+    \toprule
+    Modelo & Serie & Ajuste (val.) & Reajuste (prueba) \\
+    \midrule
+    TFT & ALB & 292,41 & 195,67 \\
+    TFT & store-service & 271,62 & 175,47 \\
+    AutoGluon TimeSeries & ALB & 161,81 & 140,03 \\
+    AutoGluon TimeSeries & store-service & 119,65 & 147,21 \\
+    auto\_arima & ALB (seleccionado) & 97,52 & 78,93 \\
+    auto\_arima & store-service & 79,47 & 46,09 \\
+    seasonal\_naive\_m24 & ambas (seleccionado en store-service) & $<0,001$ & $<0,001$ \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+\subsection{Pronóstico final a 48 horas}
+
+Con el modelo seleccionado por serie reajustado sobre la totalidad del historial disponible (entrenamiento
+más validación, con la intervención imputada), se produce un pronóstico de 48 horas posteriores al final
+del historial, entre el 26 de septiembre de 2026 a las 23:00 UTC y el 28 de septiembre de 2026 a las 22:00
+UTC. La Figura~\ref{fig:overlay} contrasta, sobre el conjunto de prueba, las trayectorias del modelo
+seleccionado, del peor modelo elegible, del SARIMA refit del trabajo anterior y de Chronos, contra el valor
+observado; la Figura~\ref{fig:forecast_final} muestra el pronóstico de 48 horas propiamente dicho, con sus
+intervalos de predicción.
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.92\textwidth]{06_test_overlay_forecast.png}
+  \caption{Pronósticos sobre el conjunto de prueba: modelo seleccionado, peor modelo, SARIMA (TP1 refit) y Chronos, ambas series.}
+  \label{fig:overlay}
+\end{figure}
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.92\textwidth]{06_final_forecast.png}
+  \caption{Pronóstico final de 48 horas con intervalos de predicción, ambas series.}
+  \label{fig:forecast_final}
+\end{figure}
+
+Los intervalos de predicción provienen de fuentes distintas según el modelo: AutoARIMA y SARIMA aportan
+intervalos nativos de 80\,\% y 95\,\%; la referencia estacional ingenua y el peor modelo elegible utilizan
+intervalos empíricos, construidos a partir de los residuos agrupados de la ventana de validación de 48
+horas, y por lo tanto constantes en cada hora del horizonte; Chronos aporta únicamente el intervalo del
+80\,\%, dado que fue entrenado solo sobre los cuantiles 0,1 y 0,9, y su intervalo del 95\,\% se deja sin
+definir en lugar de aproximarse con un cuantil no entrenado.
+
+\pendiente{Serie 3 (a cargo de otro integrante del grupo). Los resultados de esta serie --comparación por
+familia de modelos, selección y pronóstico final-- se incorporarán en esta sección una vez completado el
+trabajo del integrante responsable.}

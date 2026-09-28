@@ -1,0 +1,77 @@
+\section{Conclusiones}
+
+\subsection{Síntesis por serie}
+
+El objetivo planteado por la cátedra --determinar si los modelos contemporáneos de Machine Learning, Deep
+Learning, modelos híbridos, AutoML y modelos de fundación mejoran el pronóstico obtenido con el enfoque
+clásico del Trabajo Práctico N.\textsuperscript{o} 1-- admite una respuesta distinta según la serie y según
+el criterio utilizado. Para la serie ALB, el modelo seleccionado mediante la regla honesta de validación
+(AutoARIMA) mejora al SARIMA refit en un 48,5\,\% durante la validación, pero resulta un 34,9\,\% peor que
+ese mismo SARIMA en el conjunto de prueba; de las 32 configuraciones evaluadas, el propio SARIMA refit del
+trabajo anterior es, en definitiva, la de mejor desempeño de prueba. En esta serie, entonces, el enfoque
+clásico del trabajo anterior no fue superado por ningún modelo más reciente cuando se lo evalúa sobre datos
+no vistos durante el ajuste. Para la serie store-service, el modelo seleccionado (la referencia estacional
+ingenua) tampoco es superado en validación por ningún modelo no contaminado, pero en el conjunto de prueba
+sí lo supera un modelo de la familia Prophet (NeuralProphet, un 25,8\,\% mejor MASE que el modelo
+seleccionado), aunque ese modelo no habría sido elegido por la regla honesta de selección, dado su
+desempeño mediocre en validación (decimocuarto puesto de 32). La respuesta general, entonces, es matizada:
+los modelos más recientes pueden superar al enfoque clásico, pero no necesariamente lo hacen los mismos
+modelos que una regla de selección basada exclusivamente en validación elegiría.
+
+\subsection{Consistencia entre validación y prueba}
+
+La correlación de Spearman entre el orden de validación y el de prueba resultó baja y no significativa
+para ALB ($\rho=0,237$, $p=0,192$ sobre las 32 configuraciones) y moderada y significativa para
+store-service ($\rho=0,654$, $p<0,001$). Esta diferencia entre series sugiere que la propia confiabilidad
+del protocolo de validación --y, por lo tanto, la confianza que puede depositarse en el modelo
+seleccionado-- no es uniforme: para ALB, una ventana de validación de 48 horas ordena a los modelos de un
+modo que guarda poca relación con su desempeño posterior, mientras que para store-service ese orden es más
+informativo, aunque tampoco infalible, como lo demuestra el caso de NeuralProphet.
+
+\subsection{Límites del trabajo}
+
+\begin{enumerate}
+  \item \textbf{Ventana única de validación.} El protocolo utiliza una sola ventana de contraste de 48
+  horas, en lugar de una validación cruzada expandida de múltiples pliegues, debido al tiempo de cómputo
+  que exige comparar 32 configuraciones por serie. Esta decisión probablemente explica, al menos en parte,
+  la baja consistencia entre validación y prueba observada en ALB: una sola ventana de 48 horas es una
+  muestra pequeña del comportamiento futuro de la serie y su resultado puede estar dominado por
+  particularidades de esas horas específicas.
+  \item \textbf{Historial todavía acotado.} El historial efectivo disponible cubre 86 días (2.063
+  observaciones horarias), sensiblemente más que el mes del trabajo anterior, pero aún reducido para
+  arquitecturas de Deep Learning con una cantidad considerable de parámetros, que pueden requerir un
+  historial más extenso para generalizar de forma estable.
+  \item \textbf{Modelos con puntaje de validación contaminado.} Cinco de las 32 configuraciones por serie
+  utilizan, para su propio ajuste de hiperparámetros o para la elección de sus miembros, la misma ventana
+  de 48 horas luego utilizada para clasificarlas. Estos modelos se documentan y se muestran en las tablas y
+  figuras de este informe, pero se excluyen de la selección; de haberse permitido, la regla habría
+  seleccionado un modelo distinto en ambas series (Tabla~\ref{tab:sensibilidad}), sin que ello implicara una
+  mejora real en el conjunto de prueba.
+  \item \textbf{Posible anomalía en las últimas horas de store-service.} Las últimas horas registradas de
+  la serie store-service (20:00 a 22:00 UTC del 26 de septiembre de 2026) muestran un patrón que se aparta
+  del comportamiento de esas mismas horas en los cuatro días anteriores: una caída inusual a las 20:00 UTC,
+  seguida de un valor por encima de lo esperado a las 21:00 UTC. No se identificó un patrón equivalente en
+  la serie ALB durante esas mismas horas. Esta observación no fue investigada en profundidad y no se
+  descarta que corresponda a un artefacto puntual de exportación de datos más que a un cambio real del
+  proceso subyacente; se documenta aquí como una limitación abierta y no como un hallazgo verificado.
+  \item \textbf{Estacionalidad semanal no aprovechada.} La estacionalidad semanal, débil pero no nula
+  (fuerza de 0,206 en ALB y 0,311 en store-service según la descomposición MSTL), se excluyó de los modelos
+  Prophet y NeuralProphet y del período estacional del MASE, sobre la base de un historial que, con 86
+  días, apenas cubre unas doce semanas completas; un historial más extenso podría justificar su
+  incorporación.
+\end{enumerate}
+
+\subsection{Líneas de trabajo futuro}
+
+La continuación más directa de este trabajo consiste en reemplazar la ventana única de validación por un
+esquema de validación cruzada de múltiples orígenes (\emph{multi-origin validation}), en la línea de lo
+propuesto por \textcite{hyndman2021}, que estime el error de generalización sobre varias ventanas
+sucesivas en lugar de una sola. Una segunda línea consiste en extender el historial disponible una vez que
+transcurra más tiempo desde la puesta en producción del sistema, lo que permitiría evaluar con mayor
+solidez tanto la estacionalidad semanal como la estabilidad de las arquitecturas de Deep Learning de mayor
+capacidad. Finalmente, la incorporación de la tercera serie del grupo --pendiente en este informe--
+permitirá contrastar si las conclusiones alcanzadas para las dos series de infraestructura de BodegaAI se
+sostienen en un dominio de datos distinto.
+
+\pendiente{Serie 3 (a cargo de otro integrante del grupo). El párrafo de conclusiones específico de esta
+serie se incorporará una vez completado su análisis.}

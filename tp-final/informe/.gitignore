@@ -1,0 +1,19 @@
+# Archivos auxiliares de LaTeX (la mayoría ya cubierta por el .gitignore raíz;
+# se repite aquí para que esta carpeta sea autocontenida, y se agregan los
+# patrones de latexmk/XeLaTeX que el .gitignore raíz no cubre).
+*.aux
+*.bbl
+*.bcf
+*.blg
+*.lof
+*.log
+*.lot
+*.out
+*.run.xml
+*.toc
+*.fdb_latexmk
+*.fls
+*.xdv
+
+# El PDF es el entregable: nunca se ignora.
+!informe.pdf

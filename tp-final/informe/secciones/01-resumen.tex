@@ -1,0 +1,50 @@
+\section*{Resumen ejecutivo}
+\addcontentsline{toc}{section}{Resumen ejecutivo}
+
+El presente trabajo continúa el análisis desarrollado en el Trabajo Práctico N.\textsuperscript{o} 1
+sobre dos series horarias de infraestructura productiva de la empresa BodegaAI: la cantidad total
+de solicitudes atendidas por el balanceador de carga (\emph{RequestCount}, serie ALB) y la cantidad de
+solicitudes por destino del servicio de tienda (\emph{RequestCountPerTarget}, serie store-service). El
+historial disponible se extiende de un mes, en el trabajo anterior, a aproximadamente tres meses
+(2,063 observaciones horarias por serie, entre el 3 de julio y el 26 de septiembre de 2026, una vez
+descartada la rampa de encendido del balanceador). Una tercera serie, a cargo de otro integrante del
+grupo, se incorpora como espacio reservado en este informe.
+
+El objetivo consiste en determinar si los modelos de aprendizaje automático (Machine Learning),
+aprendizaje profundo (Deep Learning), modelos híbridos, herramientas de AutoML y modelos de fundación
+superan, bajo un protocolo honesto de validación, el desempeño de los modelos clásicos utilizados en el
+trabajo anterior (SARIMA). Se evaluaron 32 configuraciones por serie, agrupadas en diez familias:
+referencias ingenuas, modelos estadísticos clásicos, la refit del SARIMA del Trabajo Práctico N.\textsuperscript{o} 1,
+árboles de decisión con boosting y ensambles, redes neuronales profundas, Prophet y NeuralProphet, un
+híbrido de descomposición estacional con boosting, dos plataformas de AutoML y un modelo de fundación
+de series temporales (Chronos). La selección del modelo final se realizó exclusivamente por el error
+absoluto medio (MAE) de validación entre los modelos elegibles, es decir, aquellos cuyo puntaje de
+validación no estuvo contaminado por haber sido utilizado también para ajustar sus propios
+hiperparámetros; el conjunto de prueba nunca se utilizó para seleccionar.
+
+Para la serie ALB, el modelo seleccionado fue un AutoARIMA ajustado automáticamente (MASE de validación
+de 0,475), apenas por debajo de la referencia estacional ingenua (0,489) y con una mejora relativa
+considerable frente al SARIMA refit del trabajo anterior (0,923). Sin embargo, en el conjunto de prueba
+el propio SARIMA del trabajo anterior resultó el más preciso de las 32 configuraciones evaluadas (MASE de
+1,526, primer puesto), por delante de un Prophet ajustado con ventana seguro de fuga (1,578) y del modelo
+seleccionado (2,058, duodécimo puesto), lo que revela una consistencia baja y no significativa entre
+validación y prueba para esta serie (correlación de Spearman $\rho=0,237$, $p=0,192$). Para la serie
+store-service, el modelo seleccionado fue la propia referencia estacional ingenua con período 24 (MASE de
+validación de 0,480): ningún modelo de Machine Learning, Deep Learning, híbrido o de fundación logró
+superarla de manera no contaminada en validación. No obstante, en el conjunto de prueba el mejor
+desempeño correspondió a NeuralProphet (MASE de 1,071, primer puesto), con un puntaje de validación
+apenas mediocre (decimocuarto puesto); el modelo seleccionado quedó en el décimo puesto de prueba (MASE
+de 1,443). La consistencia entre validación y prueba resultó, en este caso, moderada y significativa
+($\rho=0,654$, $p<0,001$), aunque no evita divergencias puntuales como la de NeuralProphet. En síntesis,
+el enfoque clásico del trabajo anterior no fue superado de manera consistente por los modelos más
+recientes: los supera en la serie ALB en el conjunto de prueba, y en store-service es superado solo por
+un modelo de la familia Prophet que la regla de selección honesta no habría elegido.
+
+Las principales limitaciones del trabajo son la ventana única de validación de 48 horas, previa a una
+intervención de despliegue que debió imputarse; el historial todavía acotado (menos de tres meses); la
+presencia de modelos con puntaje de validación contaminado en el conjunto explorado, documentada pero no
+utilizada para seleccionar; y una posible anomalía en las últimas horas registradas de ambas series, no
+verificada como error de exportación de datos. Se concluye que, bajo un protocolo de validación estricto,
+la superioridad de los modelos de aprendizaje automático y profundo sobre el enfoque clásico del trabajo
+anterior no es uniforme: depende de la serie, del horizonte evaluado y del criterio de comparación
+utilizado.

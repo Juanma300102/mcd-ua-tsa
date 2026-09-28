@@ -1,0 +1,63 @@
+# Compilación del informe
+
+## Requisitos
+
+TeX Live 2023 (verificado en este entorno) o superior. Paquetes necesarios:
+
+```
+apa7  biblatex  biblatex-apa  biber  listings  setspace  csquotes
+babel-spanish  fontspec  geometry  booktabs  graphicx  longtable  xcolor  amsmath
+```
+
+Instalación (si faltara alguno):
+
+```bash
+tlmgr install apa7 biblatex biblatex-apa biber listings setspace csquotes
+```
+
+Si `tlmgr` reporta la instalación como exitosa pero `kpsewhich <paquete>.sty` no
+encuentra el archivo, la causa es un desajuste de versión entre la instalación
+local y el espejo remoto. Se resuelve actualizando la distribución:
+
+```bash
+curl -fsSL -o update-tlmgr-latest.sh \
+  https://mirror.ctan.org/systems/texlive/tlnet/update-tlmgr-latest.sh
+sh update-tlmgr-latest.sh --nox11 -- --upgrade
+tlmgr option repository https://mirror.ctan.org/systems/texlive/tlnet
+```
+
+## Secuencia de compilación
+
+Se compila con XeLaTeX por el manejo nativo de UTF-8, que el texto en español
+requiere. La secuencia completa, desde el directorio `informe/`:
+
+```bash
+xelatex informe.tex
+biber informe
+xelatex informe.tex
+xelatex informe.tex
+```
+
+Las tres pasadas de XeLaTeX son necesarias: la primera genera las referencias
+cruzadas, `biber` resuelve la bibliografía, y las dos siguientes estabilizan el
+índice y los números de página.
+
+## Verificación
+
+```bash
+pdfinfo informe.pdf | grep Pages
+rg -c "^! " informe.log        # debe ser 0 (o sin coincidencias)
+rg -i "undefined" informe.log  # no debe haber referencias ni citas sin resolver
+```
+
+Última compilación verificada: 37 páginas totales, 21 páginas de cuerpo (Resumen
+Ejecutivo + Introducción a Conclusiones, sin contar carátula, índice, lista de
+figuras/tablas, referencias ni apéndices), 0 errores de LaTeX, 0 referencias o
+citas sin resolver.
+
+## Nota sobre la serie 3
+
+El informe contiene recuadros "PENDIENTE" (Introducción, Análisis de Resultados
+y Conclusiones) reservados para la tercera serie, a cargo de otro integrante del
+grupo, que aún no está en el repositorio. No se debe reemplazar su contenido sin
+los resultados reales de esa serie.

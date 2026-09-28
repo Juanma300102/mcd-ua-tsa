@@ -1,0 +1,233 @@
+\appendix
+
+\section{Apéndice A. Tablas completas y material gráfico complementario}
+
+Las figuras y tablas de este apéndice documentan el análisis exploratorio y el conjunto completo de 32
+configuraciones evaluadas por serie. Se excluyeron del cuerpo del informe por resultar redundantes
+respecto de las figuras allí incluidas, por referir a aspectos discutidos únicamente de forma numérica en
+el cuerpo, o por exceder el detalle necesario para sostener sus afirmaciones centrales.
+
+\begingroup
+\tiny
+\begin{longtable}{llrrrrc}
+  \caption{Conjunto completo de 32 configuraciones evaluadas -- serie ALB.}
+  \label{tab:completo_alb}\\
+  \toprule
+  Modelo & Familia & MAE val. & MASE val. & MAE prueba & MASE prueba & Contam. \\
+  \midrule
+  \endfirsthead
+  \multicolumn{7}{l}{\small \tablename\ \thetable{} (continuación)}\\
+  \toprule
+  Modelo & Familia & MAE val. & MASE val. & MAE prueba & MASE prueba & Contam. \\
+  \midrule
+  \endhead
+  \bottomrule
+  \endfoot
+    naive & Ingenuo & 140.474,23 & 3,548 & 103.514,69 & 2,615 & No \\
+    seasonal\_naive\_m24 & Ingenuo & 19.369,02 & 0,489 & 78.784,34 & 1,990 & No \\
+    drift & Ingenuo & 143.670,97 & 3,629 & 102.288,71 & 2,584 & No \\
+    average & Ingenuo & 149.950,95 & 3,788 & 237.950,60 & 6,011 & No \\
+    SARIMA (TP1 refit) & Fundacional TP1 & 36.524,57 & 0,923 & 60.429,07 & 1,526 & No \\
+    holt\_winters & Clásico & 31.604,81 & 0,798 & 82.913,56 & 2,094 & No \\
+    mstl\_arima & Clásico & 23.468,84 & 0,593 & 76.674,57 & 1,937 & No \\
+    auto\_arima & Clásico & 18.807,50 & 0,475 & 81.488,75 & 2,058 & No \\
+    lightgbm & ML & 24.100,55 & 0,609 & 89.523,11 & 2,261 & No \\
+    xgboost & ML & 51.766,94 & 1,308 & 113.131,51 & 2,858 & No \\
+    catboost & ML & 23.676,28 & 0,598 & 92.090,22 & 2,326 & No \\
+    random\_forest & ML & 24.013,59 & 0,607 & 89.523,51 & 2,261 & No \\
+    ridge & ML & 36.145,98 & 0,913 & 67.461,63 & 1,704 & No \\
+    catboost\_direct & ML (directo) & 21.126,48 & 0,534 & 93.581,28 & 2,364 & No \\
+    catboost\_tuned & ML & 13.994,36 & 0,353 & 91.577,78 & 2,313 & Sí \\
+    random\_forest\_tuned & ML & 16.478,21 & 0,416 & 136.787,15 & 3,455 & Sí \\
+    lightgbm\_tuned & ML & 16.682,37 & 0,421 & 98.698,42 & 2,493 & Sí \\
+    stacking\_top3 & ML & 101.301,74 & 2,559 & 197.519,54 & 4,989 & Sí \\
+    lstm & DL & 75.584,94 & 1,909 & 309.470,41 & 7,817 & No \\
+    nbeats & DL & 38.805,46 & 0,980 & 69.030,03 & 1,744 & No \\
+    nhits & DL & 22.021,71 & 0,556 & 96.620,17 & 2,441 & No \\
+    tcn & DL & 45.631,83 & 1,153 & 132.828,03 & 3,355 & No \\
+    tft & DL & 60.751,26 & 1,535 & 109.629,69 & 2,769 & No \\
+    tide & DL & 31.271,07 & 0,790 & 70.489,78 & 1,781 & No \\
+    prophet\_default & Prophet & 21.066,96 & 0,532 & 81.749,90 & 2,065 & No \\
+    prophet\_tuned & Prophet & 26.085,28 & 0,659 & 62.468,36 & 1,578 & No \\
+    neuralprophet & Prophet & 29.444,69 & 0,744 & 72.996,75 & 1,844 & No \\
+    mstl\_lightgbm & Híbrido & 28.341,14 & 0,716 & 226.471,23 & 5,721 & No \\
+    autogluon\_timeseries & AutoML & 19.748,53 & 0,499 & 78.152,68 & 1,974 & No \\
+    autots & AutoML & 29.913,83 & 0,756 & 77.200,09 & 1,950 & No \\
+    chronos\_bolt\_base & Fundación & 23.678,74 & 0,598 & 79.453,52 & 2,007 & No \\
+    ensemble\_equal\_weight & Ensamble & 16.006,29 & 0,404 & 93.116,04 & 2,352 & Sí \\
+\end{longtable}
+\endgroup
+
+\begingroup
+\tiny
+\begin{longtable}{llrrrrc}
+  \caption{Conjunto completo de 32 configuraciones evaluadas -- serie store-service.}
+  \label{tab:completo_store}\\
+  \toprule
+  Modelo & Familia & MAE val. & MASE val. & MAE prueba & MASE prueba & Contam. \\
+  \midrule
+  \endfirsthead
+  \multicolumn{7}{l}{\small \tablename\ \thetable{} (continuación)}\\
+  \toprule
+  Modelo & Familia & MAE val. & MASE val. & MAE prueba & MASE prueba & Contam. \\
+  \midrule
+  \endhead
+  \bottomrule
+  \endfoot
+    naive & Ingenuo & 16.585,83 & 3,490 & 12.080,82 & 2,542 & No \\
+    seasonal\_naive\_m24 & Ingenuo & 2.281,85 & 0,480 & 6.858,35 & 1,443 & No \\
+    drift & Ingenuo & 17.022,66 & 3,582 & 12.292,99 & 2,587 & No \\
+    average & Ingenuo & 11.991,26 & 2,523 & 11.365,28 & 2,392 & No \\
+    SARIMA (TP1 refit) & Fundacional TP1 & 3.075,43 & 0,647 & 6.775,50 & 1,426 & No \\
+    holt\_winters & Clásico & 6.840,69 & 1,439 & 7.910,62 & 1,665 & No \\
+    mstl\_arima & Clásico & 3.116,58 & 0,656 & 6.738,21 & 1,418 & No \\
+    auto\_arima & Clásico & 2.525,88 & 0,532 & 6.693,19 & 1,408 & No \\
+    lightgbm & ML & 6.763,12 & 1,423 & 7.134,86 & 1,501 & No \\
+    xgboost & ML & 6.958,01 & 1,464 & 7.781,26 & 1,637 & No \\
+    catboost & ML & 8.076,39 & 1,700 & 9.427,28 & 1,984 & No \\
+    random\_forest & ML & 8.057,11 & 1,695 & 6.644,16 & 1,398 & No \\
+    ridge & ML & 5.709,70 & 1,201 & 10.402,06 & 2,189 & No \\
+    ridge\_direct & ML (directo) & 2.905,15 & 0,611 & 8.742,22 & 1,840 & No \\
+    ridge\_tuned & ML & 5.707,42 & 1,201 & 10.342,18 & 2,176 & Sí \\
+    lightgbm\_tuned & ML & 2.723,67 & 0,573 & 8.411,54 & 1,770 & Sí \\
+    xgboost\_tuned & ML & 3.281,09 & 0,690 & 6.723,50 & 1,415 & Sí \\
+    stacking\_top3 & ML & 9.327,31 & 1,963 & 9.412,96 & 1,981 & Sí \\
+    lstm & DL & 3.458,53 & 0,728 & 7.928,91 & 1,668 & No \\
+    nbeats & DL & 3.031,39 & 0,638 & 5.927,84 & 1,247 & No \\
+    nhits & DL & 3.276,37 & 0,689 & 7.119,14 & 1,498 & No \\
+    tcn & DL & 3.476,89 & 0,732 & 7.223,69 & 1,520 & No \\
+    tft & DL & 5.147,35 & 1,083 & 9.260,54 & 1,949 & No \\
+    tide & DL & 4.094,99 & 0,862 & 7.909,85 & 1,664 & No \\
+    prophet\_default & Prophet & 2.405,88 & 0,506 & 5.145,67 & 1,083 & No \\
+    prophet\_tuned & Prophet & 2.432,33 & 0,512 & 5.439,47 & 1,145 & No \\
+    neuralprophet & Prophet & 3.297,54 & 0,694 & 5.090,39 & 1,071 & No \\
+    mstl\_lightgbm & Híbrido & 8.779,73 & 1,848 & 14.729,52 & 3,100 & No \\
+    autogluon\_timeseries & AutoML & 3.808,36 & 0,801 & 8.677,17 & 1,826 & No \\
+    autots & AutoML & 2.412,97 & 0,508 & 7.582,50 & 1,596 & No \\
+    chronos\_bolt\_base & Fundación & 3.877,73 & 0,816 & 7.949,65 & 1,673 & No \\
+    ensemble\_equal\_weight & Ensamble & 2.281,64 & 0,480 & 7.661,02 & 1,612 & Sí \\
+\end{longtable}
+\endgroup
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.85\textwidth]{01_mstl_alb.png}
+  \caption{Descomposición MSTL (tendencia, estacionalidad diaria y semanal, residuo), serie ALB.}
+\end{figure}
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.85\textwidth]{01_mstl_store_service.png}
+  \caption{Descomposición MSTL, serie store-service.}
+\end{figure}
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.8\textwidth]{01_hourly_profile_heatmap_alb.png}
+  \caption{Perfil horario por día de la semana (mapa de calor), serie ALB.}
+\end{figure}
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.8\textwidth]{01_hourly_profile_heatmap_store_service.png}
+  \caption{Perfil horario por día de la semana (mapa de calor), serie store-service.}
+\end{figure}
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.75\textwidth]{01_acf_pacf_alb.png}
+  \caption{Autocorrelación y autocorrelación parcial, serie ALB.}
+\end{figure}
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.75\textwidth]{01_acf_pacf_store_service.png}
+  \caption{Autocorrelación y autocorrelación parcial, serie store-service.}
+\end{figure}
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.75\textwidth]{01_ccf_alb_store_service.png}
+  \caption{Correlación cruzada entre ALB y store-service (serie transformada), rezagos de $-24$ a $24$ horas.}
+\end{figure}
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.85\textwidth]{03_shap_store_service.png}
+  \caption{Importancia de variables (SHAP) del mejor modelo de Machine Learning, serie store-service.}
+\end{figure}
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.85\textwidth]{03_val_mae_ranking.png}
+  \caption{MASE de validación, modelos de Machine Learning (fase 03), ambas series.}
+\end{figure}
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.85\textwidth]{02_val_mape_ranking.png}
+  \caption{MAPE de validación, referencias ingenuas y modelos clásicos (fase 02), ambas series.}
+\end{figure}
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.9\textwidth]{02_test_forecast_winners.png}
+  \caption{Pronóstico de prueba de los mejores modelos de la fase 02, ambas series.}
+\end{figure}
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.9\textwidth]{05_test_forecast_best_model.png}
+  \caption{Pronóstico de prueba del mejor modelo de la fase 05 (Prophet, híbridos, AutoML y fundación), ambas series.}
+\end{figure}
+
+\section{Apéndice B. Rutinas de cómputo}
+
+Este apéndice reproduce, en forma completa, dos rutinas centrales del protocolo cuyo fragmento se citó de
+forma abreviada en el cuerpo del informe: la imputación de la intervención de despliegue y el cálculo del
+conjunto de flags de contaminación utilizado por la regla de selección.
+
+\begin{lstlisting}[caption={Imputación de la ventana de intervención mediante el valor de la semana anterior corregido por nivel (\texttt{tsa\_final/data.py}).}]
+def impute_intervention(series: pd.Series, start: pd.Timestamp, end: pd.Timestamp) -> pd.Series:
+    """Reemplaza [start, end] por el valor de t-168h, corregido por la razon
+    entre el nivel de la semana previa a la intervencion y el de la semana
+    anterior a esa. Preserva el crecimiento organico semana a semana en lugar
+    de asumir que el nivel pre-intervencion se repite sin cambios."""
+    pre_window = series.loc[start - pd.Timedelta(hours=168):start - pd.Timedelta(hours=1)]
+    prior_week = series.loc[start - pd.Timedelta(hours=336):start - pd.Timedelta(hours=169)]
+    ratio = pre_window.mean() / prior_week.mean()
+
+    imputed = series.copy()
+    mask = (series.index >= start) & (series.index <= end)
+    imputed.loc[mask] = series.shift(168).loc[mask] * ratio
+    return imputed
+\end{lstlisting}
+
+\begin{lstlisting}[caption={Marcado de modelos con puntaje de validación contaminado (\texttt{tsa\_final/selection.py}).}]
+CONTAMINATED_MODELS = {
+    "catboost_tuned": _TUNED_REASON,
+    "random_forest_tuned": _TUNED_REASON,
+    "lightgbm_tuned": _TUNED_REASON,
+    "ridge_tuned": _TUNED_REASON,
+    "xgboost_tuned": _TUNED_REASON,
+    "stacking_top3": _STACKING_REASON,
+    "ensemble_equal_weight": _ENSEMBLE_REASON,
+    # prophet_tuned se ajusta sobre una ventana segura de 168h, no sobre la
+    # ventana de validacion: no se marca como contaminado.
+}
+
+def add_contamination_flags(pool: pd.DataFrame) -> pd.DataFrame:
+    pool = pool.copy()
+    pool["val_contaminated"] = pool["model"].isin(CONTAMINATED_MODELS)
+    pool["contamination_reason"] = pool["model"].map(CONTAMINATED_MODELS).fillna("")
+    return pool
+
+def eligible_val(pool: pd.DataFrame, series: str) -> pd.DataFrame:
+    """Modelos elegibles para seleccion: split == 'val' y no contaminados,
+    ordenados por MAE de validacion ascendente."""
+    mask = (pool["series"] == series) & (pool["split"] == "val") & (~pool["val_contaminated"])
+    return pool.loc[mask].sort_values("MAE")
+\end{lstlisting}
+
+\pendiente{Serie 3 (a cargo de otro integrante del grupo). El material gráfico y las tablas completas
+correspondientes a esta serie se incorporarán en este apéndice una vez completado su análisis.}

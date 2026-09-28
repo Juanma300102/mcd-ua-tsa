@@ -1,0 +1,165 @@
+\documentclass[doc,11pt,donotrepeattitle]{apa7}
+
+% --- Idioma y tipografía ---
+\usepackage[spanish,es-noquoting,es-tabla]{babel}
+\usepackage{fontspec}
+\usepackage{csquotes}
+
+% --- Formato de página ---
+\geometry{margin=2.54cm}
+\usepackage{setspace}
+\onehalfspacing
+
+% --- Contenido ---
+\usepackage{amsmath}
+\usepackage{booktabs}
+\usepackage{graphicx}
+\usepackage{longtable}
+\usepackage{array}
+\usepackage{listings}
+\usepackage{xcolor}
+
+% --- Bibliografía en normas APA ---
+\usepackage[style=apa,backend=biber,sortcites=true]{biblatex}
+\addbibresource{bibliografia.bib}
+
+\hypersetup{hidelinks}
+
+% --- Estilo de los fragmentos de código ---
+\definecolor{codefondo}{HTML}{F6F8FA}
+\definecolor{codecomentario}{HTML}{6A737D}
+\definecolor{codepalabra}{HTML}{005CC5}
+\definecolor{codetexto}{HTML}{032F62}
+\lstset{
+  language=Python,
+  basicstyle=\ttfamily\footnotesize,
+  keywordstyle=\color{codepalabra},
+  commentstyle=\itshape\color{codecomentario},
+  stringstyle=\color{codetexto},
+  backgroundcolor=\color{codefondo},
+  frame=single,
+  rulecolor=\color{codecomentario!40},
+  numbers=none,
+  breaklines=true,
+  showstringspaces=false,
+  captionpos=b,
+  xleftmargin=0.5em,
+  xrightmargin=0.5em,
+  aboveskip=1em,
+  belowskip=1em,
+  literate={á}{{\'a}}1 {é}{{\'e}}1 {í}{{\'i}}1 {ó}{{\'o}}1 {ú}{{\'u}}1
+           {ñ}{{\~n}}1 {Á}{{\'A}}1 {É}{{\'E}}1 {Í}{{\'I}}1 {Ó}{{\'O}}1
+           {Ú}{{\'U}}1 {Ñ}{{\~N}}1 {¿}{{?`}}1 {¡}{{!`}}1
+}
+
+\renewcommand{\lstlistingname}{Código}
+\renewcommand{\lstlistlistingname}{Índice de código}
+
+\graphicspath{{figuras/}}
+
+% --- Recuadro de contenido pendiente (serie 3, a cargo de otro integrante) ---
+\definecolor{pendientelinea}{HTML}{B45309}
+\definecolor{pendientefondo}{HTML}{FEF3C7}
+\newcommand{\pendiente}[1]{%
+  \begin{center}
+  \fcolorbox{pendientelinea}{pendientefondo}{%
+    \begin{minipage}{0.90\textwidth}
+    \textbf{PENDIENTE:} #1
+    \end{minipage}%
+  }
+  \end{center}
+}
+
+\title{Pronóstico de series temporales de infraestructura productiva mediante modelos de aprendizaje automático, aprendizaje profundo e híbridos}
+\shorttitle{Pronóstico de series temporales con ML, DL y modelos híbridos}
+\author{}
+\affiliation{}
+
+\begin{document}
+
+% ============ i. CARÁTULA ============
+\thispagestyle{empty}
+\begin{center}
+\vspace*{2.8cm}
+
+{\Large\bfseries Pronóstico de series temporales de infraestructura\\[0.3em]
+productiva mediante modelos de aprendizaje automático,\\[0.3em]
+aprendizaje profundo e híbridos\par}
+
+\vspace{0.8cm}
+{\large\itshape Modelado y pronóstico mediante Machine Learning, Deep Learning,\\
+modelos híbridos, AutoML y modelos de fundación\par}
+
+\vspace{1.2cm}
+{\large Trabajo Práctico N.\textsuperscript{o} 2\par}
+
+\vspace{2cm}
+{\large Análisis de Series Temporales\par}
+\vspace{0.4em}
+{\large Maestría en Ciencia de Datos\par}
+\vspace{0.4em}
+{\large Universidad Austral\par}
+
+\vspace{2cm}
+\textbf{Docente}\par
+\vspace{0.4em}
+Rodrigo Del Rosso\par
+
+\vspace{2cm}
+\textbf{Integrantes}\par
+\vspace{0.4em}
+Carlos Aular\par
+\vspace{0.3em}
+Juan Martín Pedrozo\par
+
+\vfill
+Fecha de entrega: septiembre de 2026
+\end{center}
+\newpage
+\setcounter{page}{1}
+
+% ============ ii. RESUMEN EJECUTIVO ============
+\input{secciones/01-resumen}
+
+% ============ iii. ÍNDICE DE CONTENIDO ============
+\newpage
+\tableofcontents
+\newpage
+\listoffigures
+\listoftables
+\newpage
+
+% ============ iv. INTRODUCCIÓN ============
+\input{secciones/02-introduccion}
+
+% ============ v. MARCO TEÓRICO ============
+\input{secciones/03-marco-teorico}
+
+% ============ vi. ANÁLISIS DE RESULTADOS ============
+\input{secciones/04-analisis}
+
+% ============ vii. CONCLUSIONES ============
+\input{secciones/05-conclusiones}
+
+% ============ Declaración de uso de IA generativa ============
+\newpage
+\section*{Declaración de uso de IA generativa}
+\addcontentsline{toc}{section}{Declaración de uso de IA generativa}
+
+Siguiendo las recomendaciones de transparencia para citar y describir el uso de IA generativa
+en trabajos académicos \parencite{mcadoo2025generativeai}, se declara que durante el desarrollo
+de este trabajo se emplearon agentes de IA generativa (Claude Code, de Anthropic, con el
+modelo Sonnet) como apoyo para la exploración del repositorio, el desarrollo y la revisión del
+código, y la redacción y edición del presente informe \parencite{anthropic2026claude_code_sonnet}.
+El uso de estas herramientas tuvo carácter asistivo: las decisiones metodológicas, la selección
+de datos, la ejecución de los análisis, la validación de resultados y la responsabilidad final
+del informe corresponden a los autores.
+
+% ============ viii. REFERENCIAS BIBLIOGRÁFICAS ============
+\newpage
+\printbibliography[title={Referencias bibliográficas}, heading=bibintoc]
+
+% ============ ix. APÉNDICES ============
+\input{secciones/06-apendices}
+
+\end{document}
