@@ -460,14 +460,19 @@ def build_header_cells() -> list[nbf.NotebookNode]:
             "print(f\"Python {sys.version.split()[0]}\")\n"
             "for _pkg in [\n"
             '    "numpy", "pandas", "scipy", "statsmodels", "statsforecast", "scikit-learn",\n'
-            '    "skforecast", "lightgbm", "xgboost", "catboost", "shap", "torch", "darts",\n'
+            '    "skforecast", "lightgbm", ("xgboost", "xgboost-cpu"), "catboost", "shap", "torch", "darts",\n'
             '    "pytorch-lightning", "prophet", "neuralprophet", "autogluon.timeseries", "autots",\n'
             '    "chronos-forecasting", "optuna", "matplotlib", "holidays", "nbformat", "nbconvert",\n'
             "]:\n"
-            "    try:\n"
-            "        print(f\"{_pkg}: {_importlib_metadata.version(_pkg)}\")\n"
-            "    except _importlib_metadata.PackageNotFoundError:\n"
-            '        print(f"{_pkg}: no instalado en este entorno")\n'
+            "    _candidatos = _pkg if isinstance(_pkg, tuple) else (_pkg,)\n"
+            "    for _candidato in _candidatos:\n"
+            "        try:\n"
+            "            print(f\"{_candidato}: {_importlib_metadata.version(_candidato)}\")\n"
+            "            break\n"
+            "        except _importlib_metadata.PackageNotFoundError:\n"
+            "            continue\n"
+            "    else:\n"
+            '        print(f"{_candidatos[0]}: no instalado en este entorno")\n'
         ),
         md(
             "## Configuración\n\n"
